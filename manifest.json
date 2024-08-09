@@ -1,0 +1,41 @@
+{
+    "manifest_version": 3,
+    "name": "Sarena Autofill",
+    "description": "Gather from Jotform and fill gmail draft and google docs.",
+    "version": "0.1",
+    "permissions": [
+        "identity",
+        "storage",
+        "scripting",
+        "activeTab",
+        "identity.email",
+        "https://www.googleapis.com/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup/popup.html",
+        "default_icon": "images/default-icon.png"
+    },
+    "content_scripts": [
+        {
+            "js": ["scripts/content.js"],
+            "matches": [
+                "https://developer.chrome.com/docs/extensions/*",
+                "https://developer.chrome.com/docs/webstore/*"
+            ]
+        }
+    ],
+    "oauth2": {
+        "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+        "scopes": [
+        "https://www.googleapis.com/auth/gmail.compose",
+        "https://www.googleapis.com/auth/documents"
+        ]
+    },
+    "host_permissions": [
+        "*://*.google.com/*",
+        "*://*.googleapis.com/*"
+    ]
+}
