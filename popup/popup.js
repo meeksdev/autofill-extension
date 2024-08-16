@@ -1,4 +1,4 @@
-console.log("This is a popup!");
+// console.log("This is a popup!");
 
 
 // 1. Gather info from Jotform or Google Forms
@@ -9,3 +9,9 @@ console.log("This is a popup!");
 
 // 4. Potentially autofill data to a google sheet or Sarena's new drug log site.
 
+
+console.log("This is a popup!");
+chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+    let activeTab = tabs[0];
+    chrome.tabs.sendMessage(activeTab.id, { action: 'printWindow' });
+});

@@ -4,34 +4,40 @@
     "description": "Gather from Jotform and fill gmail draft and google docs.",
     "version": "0.1",
     "permissions": [
+        "activeTab",
+        "tabs",
         "identity",
         "storage",
         "scripting",
-        "activeTab",
-        "identity.email",
-        "https://www.googleapis.com/*"
+        "https://www.googleapis.com/*",
+        "https://api.jotform.com/*",
+        "https://www.googleapis.com/auth/gmail.compose",
+        "https://www.googleapis.com/auth/documents",
+        "https://www.googleapis.com/auth/drive"
     ],
     "background": {
         "service_worker": "background.js"
     },
     "action": {
-        "default_popup": "popup/popup.html",
-        "default_icon": "images/default-icon.png"
+        "default_icon": "images/default-icon.png",
+        "default_popup": "popup/popup.html"
     },
     "content_scripts": [
         {
-            "js": ["scripts/content.js"],
-            "matches": [
-                "https://developer.chrome.com/docs/extensions/*",
-                "https://developer.chrome.com/docs/webstore/*"
-            ]
+            "js": ["scripts/jotform-content.js"],
+            "matches": ["https://www.jotform.com/*"]
+        },
+        {
+            "js": ["scripts/googledocs-content.js"],
+            "matches": ["https://docs.google.com/*"]
         }
     ],
     "oauth2": {
-        "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+        "client_id": "746464567000-gelv7pa051rulpmuq8u9c48esb8jkuii.apps.googleusercontent.com",
         "scopes": [
         "https://www.googleapis.com/auth/gmail.compose",
-        "https://www.googleapis.com/auth/documents"
+        "https://www.googleapis.com/auth/documents",
+        "https://www.googleapis.com/auth/drive"
         ]
     },
     "host_permissions": [
