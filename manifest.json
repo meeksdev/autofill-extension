@@ -35,9 +35,9 @@
     "oauth2": {
         "client_id": "746464567000-gelv7pa051rulpmuq8u9c48esb8jkuii.apps.googleusercontent.com",
         "scopes": [
-        "https://www.googleapis.com/auth/gmail.compose",
-        "https://www.googleapis.com/auth/documents",
-        "https://www.googleapis.com/auth/drive"
+            "https://www.googleapis.com/auth/gmail.compose",
+            "https://www.googleapis.com/auth/documents",
+            "https://www.googleapis.com/auth/drive"
         ]
     },
     "host_permissions": [

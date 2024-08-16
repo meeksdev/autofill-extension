@@ -79,7 +79,6 @@ function createFormButtonModal() {
     printButton.textContent = 'Print Sympathy Card';
     printButton.style.backgroundColor = '#4285f4';
     printButton.style.color = '#fff';
-    printButton.
     // printButton.style.border = 'none';
     printButton.style.borderRadius = '5px';
     printButton.style.cursor = 'pointer';
@@ -110,17 +109,11 @@ function createFormButtonModal() {
     document.body.appendChild(modal);
     console.log('Button created and appended to the body');
 
-    /* gatherButton.addEventListener('mousedown', function() {
-        gatherButton.style.backgroundColor = '#295499';
-    });
-
-    gatherButton.addEventListener('mouseup', function() {
-        gatherButton.style.backgroundColor = '#4285f4';
-    }); */
-
     // Add an event listener to the button
     gatherButton.addEventListener('click', () => {
         console.log('Gather Button clicked');
+        gatherButton.style.backgroundColor = '#b8cff5';
+        loadingText.style.display = 'block';
         
         // Extract the form ID from the URL
         const urlPath = window.location.pathname;
@@ -131,11 +124,12 @@ function createFormButtonModal() {
         chrome.runtime.sendMessage({ action: 'getJotFormSubmissionData', submissionId: submissionId }, function(response) {
             if (response.success) {
                 console.log('Form Submission:', response.data);
-                step1Text.style.color = 'lightgrey';
-                step1Text.style.textDecoration = 'line-through';
-                gatherButton.style.backgroundColor = '#b8cff5';
-                step2Text.style.display = 'block';
-                printButton.style.display = 'block';
+                // step1Text.style.color = 'lightgrey';
+                // step1Text.style.textDecoration = 'line-through';
+                // gatherButton.style.backgroundColor = '#b8cff5';
+                // step2Text.style.display = 'block';
+                // printButton.style.display = 'block';
+                modal.style.display = 'none';
 
                 window.open(`https://mail.google.com/mail/u/0/#drafts/${response.draftId}`, '_blank');
                 // window.open(`https://docs.google.com/document/d/${response.docId}/edit`, '_blank');

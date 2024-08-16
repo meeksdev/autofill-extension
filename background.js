@@ -95,11 +95,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         chrome.tabs.create({ url: docUrl }, function(tab) {
             chrome.tabs.onUpdated.addListener(function onTabUpdated(tabId, info) {
                 if (tabId === tab.id && info.status === 'complete') {
-                    chrome.tabs.sendMessage(tabId, { action: 'printDoc' });
+                    chrome.tabs.sendMessage(tabId, { action: 'printDoc', docId: message.docId });
                     chrome.tabs.onUpdated.removeListener(onTabUpdated);
                 }
             });
         });
+    }
+
+    else if (message.action === 'deleteDoc') {
+        deleteDocument(message.docId);
     }
 });
 
@@ -250,7 +254,26 @@ function createGoogleDoc(callback) {
     });
 }
 
-
+function deleteDocument(docId) {
+    chrome.identity.getAuthToken({ interactive: true }, function(token) {
+        fetch(`https://www.googleapis.com/drive/v3/files/${docId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('Document deleted successfully');
+            } else {
+                console.error('Failed to delete document');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting document:', error);
+        });
+    });
+}
 
 
 
