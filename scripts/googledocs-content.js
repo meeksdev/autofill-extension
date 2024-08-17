@@ -21,25 +21,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
     }
 });
-
-
-/* function deleteDocument(docId) {
-    chrome.identity.getAuthToken({ interactive: true }, function(token) {
-        fetch(`https://www.googleapis.com/drive/v3/files/${docId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                console.log('Document deleted successfully');
-            } else {
-                console.error('Failed to delete document');
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting document:', error);
-        });
-    });
-} */

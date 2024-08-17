@@ -1,24 +1,5 @@
-/* chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === 'formSubmitted') {
-        const formData = request.data;
-
-        // Example: Process form data and interact with Gmail/Google Docs API
-        // Call your functions to create Gmail drafts and Google Docs here
-
-        console.log('Form data received in background script:', formData);
-
-        // Notify content script that processing is complete
-        chrome.tabs.sendMessage(sender.tab.id, {
-            action: 'formProcessingComplete',
-            data: formData
-        });
-        
-        sendResponse({status: 'success'});
-    }
-}); */
-
 console.log('Background Script Running');
-chrome.tabs.onUpdated.addListener((tabId, tab) => {
+/* chrome.tabs.onUpdated.addListener((tabId, tab) => {
     console.log('listener added');
     // console.log(tab);
     if (tab.url && tab.url.includes("jotform.com/inbox/")) {
@@ -27,6 +8,17 @@ chrome.tabs.onUpdated.addListener((tabId, tab) => {
             action: 'createFormButton',
             type: "NEW"
         })
+    }
+}); */
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    // Check if the page is fully loaded
+    if (changeInfo.status === 'complete' && tab.url && tab.url.includes("jotform.com/inbox/")) {
+        console.log('listener added');
+        chrome.tabs.sendMessage(tabId, {
+            action: 'createFormButton',
+            type: "NEW"
+        });
     }
 });
 

@@ -3,13 +3,15 @@
 
 
 // Wait for the document to fully load
-if(document.readyState == 'loading') {
+/* if(document.readyState == 'loading') {
     document.addEventListener('DOMContentLoaded', createFormButtonModal);
 } else {
     createFormButtonModal();
-}
+} */
 
+// console.log('Before listener is called');
 chrome.runtime.onMessage.addListener((message, sender, response) => {
+    console.log('Listener added');
     if (message.action === 'createFormButton') {
         console.log('Message received');
         const { type } = message;
@@ -18,11 +20,15 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
             createFormButtonModal();
         }
     } 
-    // else if (message.action === 'printWindow') {
-    //     console.log('Printing window');
-    //     printCurrentWindow();
-    // }
 });
+
+/* if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        createFormButtonModal();
+    });
+} else {
+    createFormButtonModal();
+} */
 
 
 
