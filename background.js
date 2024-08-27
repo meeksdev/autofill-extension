@@ -13,13 +13,23 @@ console.log('Background Script Running');
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     // Check if the page is fully loaded
-    if (changeInfo.status === 'complete' && tab.url && tab.url.includes("jotform.com/inbox/")) {
-        console.log('listener added');
-        chrome.tabs.sendMessage(tabId, {
-            action: 'createFormButton',
-            type: "NEW"
-        });
-    }
+    chrome.storage.local.get(['jotformFormId'], function(result) {
+        const jotformFormId = result.jotformFormId;
+        console.log('Retrieved JotForm form ID: ' + jotformFormId);
+        if (changeInfo.status === 'complete' && tab.url && tab.url.includes(`jotform.com/inbox/${jotformFormId}`)) {
+            console.log('listener added');
+            chrome.tabs.sendMessage(tabId, {
+                action: 'createFormButton',
+                type: "NEW"
+            });
+        } else if (changeInfo.status === 'complete' && tab.url && tab.url.includes(`pawsetrack.vet/app/orders/add`)) {
+            console.log('listener added');
+            chrome.tabs.sendMessage(tabId, {
+                action: 'fillCrematoryForm',
+                type: "NEW"
+            });
+        }
+    });
 });
 
 
@@ -27,58 +37,65 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'getJotFormSubmissionData') {
         const submissionId = message.submissionId;
-        const apiKey = '4e5ec9c3461e2bfa62f97b7a8f504aa7'; // Replace with your actual API key
+        // const apiKey = '4e5ec9c3461e2bfa62f97b7a8f504aa7'; // Replace with your actual API key
 
-        // Example: Fetching form submissions
-        // fetch(`https://api.jotform.com/form/${formId}/submissions?apiKey=${apiKey}`)
-        fetch(`https://api.jotform.com/submission/${submissionId}?apiKey=${apiKey}`)
-            .then(response => response.json())
-            .then(data => {
-                let submissionData = extractFormData(data.content.answers);
-                submissionData = gatherAdditionalPetInformation(submissionData);
-                submissionData.submissionDate = data.content.created_at;
-                console.log(submissionData);
+        chrome.storage.local.get(['jotformToken'], function(result) {
+            const jotformToken = result.jotformToken;
+            console.log('Retrieved JotForm token: ' + jotformToken);
+        
+            fetch(`https://api.jotform.com/submission/${submissionId}?apiKey=${jotformToken}`)
+                .then(response => response.json())
+                .then(data => {
+                    let submissionData = extractFormData(data.content.answers);
+                    submissionData = gatherAdditionalPetInformation(submissionData);
+                    submissionData.submissionDate = data.content.created_at;
+                    console.log(submissionData);
 
-                const emailBody = `
-                    <p>Patient: ${submissionData.nameOf}</p>
+                    const emailBody = `
+                        <p>Patient: ${submissionData.nameOf}</p>
+                        <p>Date of Scheduled Appointment: ${submissionData.appointmentDate}</p>
+                        <p>Client Name: ${submissionData.clientName}</p>
+                        <p>Adress: ${submissionData.address}</p>
+                        <p>Phone Number: ${submissionData.phoneNumber}</p>
 
-                    <p><strong>Pet’s ashes and/or memorial products will be delivered to your hospital by West Coast Pet Memorial. Please call the owner when they are ready to be picked-up.</strong></p>
+                        <p><strong>Pet’s ashes and/or memorial products will be delivered to your hospital by West Coast Pet Memorial. Please call the owner when they are ready to be picked-up.</strong></p>
 
-                    <p>Dear Doctors and Staff,</p>
+                        <p>Dear Doctors and Staff,</p>
 
-                    <p>I regret to inform you of the passing of our mutual patient, ${submissionData.nameOf}, who was humanely euthanized in the comfort of home due to declining quality of life. My condolences for the loss of your patient.<p>
+                        <p>I regret to inform you of the passing of our mutual patient, ${submissionData.nameOf}, who was humanely euthanized in the comfort of home due to declining quality of life. My condolences for the loss of your patient.<p>
 
-                    <p>I sincerely appreciate your referral and time. Please do not hesitate to contact me with any questions.</p>
-                `
-                let draftId;
-                sendGmailDraft('EnterHospitalEmail@gmail.com', `${submissionData.nameOf}'s Passing`, emailBody, function(error, response) {
-                    if (error) {
-                        console.error('Failed to create Gmail draft:', error.message);
-                        // Handle the error (e.g., show an error message to the user)
-                        return;
-                    }
-                    console.log('Gmail draft created successfully:', response);
-                    draftId = response.id;
+                        <p>I sincerely appreciate your referral and time. Please do not hesitate to contact me with any questions.</p>
+                    `
+                    let draftId;
+                    sendGmailDraft('EnterHospitalEmail@gmail.com', `${submissionData.nameOf}'s Passing`, emailBody, function(error, response) {
+                        if (error) {
+                            console.error('Failed to create Gmail draft:', error.message);
+                            // Handle the error (e.g., show an error message to the user)
+                            return;
+                        }
+                        console.log('Gmail draft created successfully:', response);
+                        draftId = response.id;
+                    });
+
+                    let copiedDocId;
+                    createDocFromTemplate('1dQthwmn36E_eIrBKiXn-47rxqtfjTr8AGzyXjXYFNp4', `${submissionData.nameOf}\'s Passing ${submissionData.submissionDate}`, {
+                        NameOfPet: submissionData.nameOf,
+                        species: submissionData.cuteSpecies,
+                        pronoun1: submissionData.pronoun1,
+                        pronoun2: submissionData.pronoun2
+                    }, function(newDocId) {
+                        copiedDocId = newDocId;
+                        console.log('New document created with ID:', newDocId);
+
+                        sendResponse({ success: true, data: data, docId: copiedDocId, draftId: draftId });
+                    });
+                    
+                })
+                .catch(error => {
+                    // console.error('JotForm API Error:', error);
+                    sendResponse({ success: false, error: error });
                 });
-
-                let copiedDocId;
-                createDocFromTemplate('1dQthwmn36E_eIrBKiXn-47rxqtfjTr8AGzyXjXYFNp4', `${submissionData.nameOf}\'s Passing ${submissionData.submissionDate}`, {
-                    NameOfPet: submissionData.nameOf,
-                    species: submissionData.cuteSpecies,
-                    pronoun1: submissionData.pronoun1,
-                    pronoun2: submissionData.pronoun2
-                }, function(newDocId) {
-                    copiedDocId = newDocId;
-                    console.log('New document created with ID:', newDocId);
-
-                    sendResponse({ success: true, data: data, docId: copiedDocId, draftId: draftId });
-                });
-                
-            })
-            .catch(error => {
-                // console.error('JotForm API Error:', error);
-                sendResponse({ success: false, error: error });
-            });
+        });
 
         return true; // Keep the messaging channel open for async response
 
@@ -145,7 +162,7 @@ function gatherAdditionalPetInformation(submissionData) {
 
 
 
-function authenticate(callback) {
+function authenticateGoogle(callback) {
     chrome.identity.getAuthToken({ interactive: true }, function(token) {
         if (chrome.runtime.lastError || !token) {
             console.error('Authentication error:', chrome.runtime.lastError);
@@ -154,7 +171,6 @@ function authenticate(callback) {
         callback(token);
     });
 }
-
 
 //Use when scope changes
 /* function reAuthenticate(callback) {
@@ -231,7 +247,7 @@ function makeApiCall(url, method, data, token, callback) {
 
 
 function createGoogleDoc(callback) {
-    authenticate(function(token) {
+    authenticateGoogle(function(token) {
         const url = 'https://docs.googleapis.com/v1/documents';
         const data = { title: 'New Document' };
 
@@ -270,7 +286,7 @@ function deleteDocument(docId) {
 
 
 function copyTemplate(templateDocId, title, callback) {
-    authenticate(function(token) {
+    authenticateGoogle(function(token) {
         const url = `https://www.googleapis.com/drive/v3/files/${templateDocId}/copy`;
         const data = { name: title };
 
@@ -286,7 +302,7 @@ function copyTemplate(templateDocId, title, callback) {
 }
 
 function replaceTextInDocument(docId, replacements, callback) {
-    authenticate(function(token) {
+    authenticateGoogle(function(token) {
         const url = `https://docs.googleapis.com/v1/documents/${docId}:batchUpdate`;
 
         const requests = Object.keys(replacements).map(key => ({
@@ -363,7 +379,7 @@ function createDocFromTemplate(templateDocId, title, replacements, callback) {
 
 //HTML email
 function sendGmailDraft(to, subject, body, callback) {
-    authenticate(function(token) {
+    authenticateGoogle(function(token) {
         if (!token) {
             console.error('Authentication failed: No token received.');
             return callback(new Error('Authentication failed.'));

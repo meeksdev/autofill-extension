@@ -30,6 +30,11 @@
         {
             "js": ["scripts/googledocs-content.js"],
             "matches": ["https://docs.google.com/*"]
+        },
+        {
+            "js": ["scripts/pawsetrack-content.js"],
+            "matches": ["https://www.pawsetrack.vet/*"],
+            "run_at": "document_end"
         }
     ],
     "oauth2": {

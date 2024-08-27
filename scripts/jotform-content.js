@@ -119,6 +119,8 @@ function createFormButtonModal() {
     gatherButton.addEventListener('click', () => {
         console.log('Gather Button clicked');
         gatherButton.style.backgroundColor = '#b8cff5';
+        gatherButton.style.cursor = 'progress';
+        gatherButton.disabled = true;
         loadingText.style.display = 'block';
         
         // Extract the form ID from the URL
