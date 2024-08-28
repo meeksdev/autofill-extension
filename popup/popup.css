@@ -1,19 +1,11 @@
 body {
     width: 400px;
-    /* color: red; */
-    /* text-align: right; */
-    
 }
 
 .input-group {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* margin: 0 0 0 auto; */
-    /* position: relative; */
-    /* float: right; */
-    /* display: block; */
-    /* margin-left: auto; */
 }
 
 #saveButton {

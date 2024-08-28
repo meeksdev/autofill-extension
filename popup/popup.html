@@ -1,29 +1,37 @@
 <html>
-  <head>
-    <link rel="stylesheet" href="popup.css">
-  </head>
-  <body>
-    <div class="input-group">
-      <label>Jotform API Key:</label>
-      <input type="text" id="jotformToken" placeholder="Enter API key">
-    </div>
-    <div class="input-group">
-      <label>Jotform Form ID:</label>
-      <input type="text" id="jotformFormId" placeholder="Enter Form ID">
-    </div>
+    <head>
+        <link rel="stylesheet" href="popup.css" />
+    </head>
+    <body>
+        <div class="input-group">
+            <label>Jotform API Key:</label>
+            <input type="text" id="jotformToken" placeholder="Enter API key" />
+        </div>
+        <div class="input-group">
+            <label>Jotform Form ID:</label>
+            <input type="text" id="jotformFormId" placeholder="Enter Form ID" />
+        </div>
 
-    <div class="input-group">
-      <label>Google Doc Letter Template ID:</label>
-      <input type="text" id="letterTemplateId" placeholder="Enter Letter Template ID">
-    </div>
-    <div class="input-group">
-      <label>Google Doc Envelope Template ID:</label>
-      <input type="text" id="envelopeTemplateId" placeholder="Enter Envelope Template ID">
-    </div>
+        <div class="input-group">
+            <label>Google Doc Letter Template ID:</label>
+            <input
+                type="text"
+                id="letterTemplateId"
+                placeholder="Enter Letter Template ID"
+            />
+        </div>
+        <div class="input-group">
+            <label>Google Doc Envelope Template ID:</label>
+            <input
+                type="text"
+                id="envelopeTemplateId"
+                placeholder="Enter Envelope Template ID"
+            />
+        </div>
 
-    <button id="saveButton">Save</button>
-    <p id="statusMessage"></p>
-    <!-- <h1>Print Window</h1> -->
-    <script src='./popup.js'></script>
-  </body>
+        <button id="saveButton">Save</button>
+        <p id="statusMessage"></p>
+        <!-- <h1>Print Window</h1> -->
+        <script src="./popup.js"></script>
+    </body>
 </html>
