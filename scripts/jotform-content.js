@@ -93,6 +93,10 @@ function createFormButtonModal() {
                     modal.style.display = "none";
 
                     window.open(
+                        `https://www.pawsetrack.vet/app/dashboard`,
+                        "_blank"
+                    );
+                    window.open(
                         `https://mail.google.com/mail/u/0/#drafts/${response.draftId}`,
                         "_blank"
                     );
