@@ -15,7 +15,7 @@ const petAndOwnerKeys = [
 ];
 // const bundlesKeys = [];
 // const urnKeys = [];
-const memorialKeys = [];
+// const memorialKeys = [];
 
 chrome.runtime.onMessage.addListener((message, sender, response) => {
   console.log("Listener added");
@@ -26,7 +26,6 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
       const intervalId = setInterval(() => {
         const form = document.forms[0];
         if (form) {
-          // console.log(form);
           clearInterval(intervalId); // Stop the loop when the condition is met
           getStoredData(petAndOwnerKeys, (storage) => {
             fillPetAndOwnerForm(form, storage);
@@ -131,7 +130,6 @@ for (let i = 0; i < form.elements.length; i++) {
 }
 
 function selectUrn(storage) {
-  //   console.log(storage.urnChoice);
   const intervalId = setInterval(() => {
     const urnButton = [...document.querySelectorAll("div[role=button]")].find(
       (div) =>

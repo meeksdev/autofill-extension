@@ -1,13 +1,3 @@
-// console.log('Currently on a submission page!');
-
-// Wait for the document to fully load
-/* if(document.readyState == 'loading') {
-    document.addEventListener('DOMContentLoaded', createFormButtonModal);
-} else {
-    createFormButtonModal();
-} */
-
-// console.log('Before listener is called');
 chrome.runtime.onMessage.addListener((message, sender, response) => {
   console.log("Listener added");
   if (message.action === "createFormButton") {
@@ -19,14 +9,6 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
     }
   }
 });
-
-/* if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        createFormButtonModal();
-    });
-} else {
-    createFormButtonModal();
-} */
 
 function createFormButtonModal() {
   // Check if modal already exists
@@ -58,31 +40,16 @@ function createFormButtonModal() {
 
   // Create description Text
   const step1Text = document.createElement("p");
-  step1Text.innerHTML = "Step 1. Gather the data from the form submission.";
+  step1Text.innerHTML = "Gather the data from the form submission.";
+
   // Create the gather button element
   const gatherButton = document.createElement("button");
   gatherButton.textContent = "Fetch JotForm Data";
   gatherButton.style.backgroundColor = "#4285f4";
   gatherButton.style.color = "#fff";
-  // gatherButton.style.border = 'none';
   gatherButton.style.borderRadius = "5px";
   gatherButton.style.cursor = "pointer";
   gatherButton.style.padding = "10px 20px";
-
-  /* // Create description Text
-  const step2Text = document.createElement("p");
-  step2Text.innerHTML = "Step 2. Print the sympathy card.";
-  step2Text.style.display = "none";
-  // Create the print button element
-  const printButton = document.createElement("button");
-  printButton.textContent = "Print Sympathy Card";
-  printButton.style.backgroundColor = "#4285f4";
-  printButton.style.color = "#fff";
-  // printButton.style.border = 'none';
-  printButton.style.borderRadius = "5px";
-  printButton.style.cursor = "pointer";
-  printButton.style.padding = "10px 20px";
-  printButton.style.display = "none"; */
 
   // Add a close button to the modal
   const closeButton = document.createElement("div");
@@ -101,8 +68,6 @@ function createFormButtonModal() {
   modal.appendChild(step1Text);
   modal.appendChild(gatherButton);
   modal.appendChild(loadingText);
-  // modal.appendChild(step2Text);
-  // modal.appendChild(printButton);
 
   // Append the button to the body of the webpage
   document.body.appendChild(modal);
@@ -127,18 +92,12 @@ function createFormButtonModal() {
       function (response) {
         if (response.success) {
           console.log("Form Submission:", response.data);
-          // step1Text.style.color = 'lightgrey';
-          // step1Text.style.textDecoration = 'line-through';
-          // gatherButton.style.backgroundColor = '#b8cff5';
-          // step2Text.style.display = 'block';
-          // printButton.style.display = 'block';
           modal.style.display = "none";
 
           window.open(
             `https://mail.google.com/mail/u/0/#drafts/${response.draftId}`,
             "_blank"
           );
-          // window.open(`https://docs.google.com/document/d/${response.docId}/edit`, '_blank');
           printGoogleDoc(response.docId);
         } else {
           console.error("Failed to fetch JotForm data:", response.error);
@@ -157,7 +116,6 @@ function createFormButtonModal() {
 }
 
 function printGoogleDoc(docId) {
-  // const docId = 'your-google-doc-id-here'; // Replace with the actual Google Doc ID
   chrome.runtime.sendMessage({ action: "openAndPrintDoc", docId: docId });
 }
 
