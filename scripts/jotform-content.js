@@ -1,9 +1,6 @@
 chrome.runtime.onMessage.addListener((message, sender, response) => {
-    console.log("Listener added");
     if (message.action === "createFormButton") {
-        console.log("Message received");
         const { type } = message;
-
         if (type === "NEW") {
             createFormButtonModal();
         }
@@ -14,7 +11,6 @@ function createFormButtonModal() {
     // Check if modal already exists
     const existingAutofillModal = document.getElementById("AutofillModal");
     if (existingAutofillModal) {
-        console.log("Modal already exists. Check if it is hidden");
         existingAutofillModal.style.display = "flex";
         return; // Don't create a new modal if one already exists
     }
@@ -71,11 +67,9 @@ function createFormButtonModal() {
 
     // Append the button to the body of the webpage
     document.body.appendChild(modal);
-    console.log("Button created and appended to the body");
 
     // Add an event listener to the button
     gatherButton.addEventListener("click", () => {
-        console.log("Gather Button clicked");
         gatherButton.style.backgroundColor = "#b8cff5";
         gatherButton.style.cursor = "progress";
         gatherButton.disabled = true;
@@ -84,14 +78,18 @@ function createFormButtonModal() {
         // Extract the form ID from the URL
         const urlPath = window.location.pathname;
         const submissionId = urlPath.split("/").pop(); // Gets the last part of the URL path
-        console.log("Submission ID from URL:", submissionId);
+        console.log("%cSubmission ID from URL:", "color: green", submissionId);
 
         // Send a message to the background script to fetch data from JotForm
         chrome.runtime.sendMessage(
             { action: "getJotFormSubmissionData", submissionId: submissionId },
             function (response) {
                 if (response.success) {
-                    console.log("Form Submission:", response.data);
+                    console.log(
+                        "%cForm Submission:",
+                        "color: green",
+                        response.data
+                    );
                     modal.style.display = "none";
 
                     window.open(

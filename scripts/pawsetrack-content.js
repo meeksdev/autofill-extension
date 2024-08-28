@@ -18,7 +18,6 @@ const petAndOwnerKeys = [
 // const memorialKeys = [];
 
 chrome.runtime.onMessage.addListener((message, sender, response) => {
-    console.log("Listener added");
     const { type, action } = message;
     if (type === "NEW") {
         if (action === "fillPetAndOwnerForm") {
@@ -44,7 +43,7 @@ function getStoredData(keys, callback) {
     chrome.storage.local.get(keys, function (result) {
         keys.forEach((key) => {
             if (!result[key] && key !== "clientAddress2") {
-                console.log(`${key} Does not exist: ${result[key]}`);
+                console.warn(`${key} Does not exist: ${result[key]}`);
             }
         });
 
@@ -53,10 +52,6 @@ function getStoredData(keys, callback) {
 }
 
 function fillPetAndOwnerForm(form, storage) {
-    console.log(`Fill Crematory Form`);
-    console.log(form);
-    console.log(storage);
-
     // Loop through each input element in the form and log its name
     /* console.log(form.elements.length);
 for (let i = 0; i < form.elements.length; i++) {
@@ -127,7 +122,6 @@ for (let i = 0; i < form.elements.length; i++) {
     form["address2"].value = storage.clientAddress2;
 
     const submitButton = document.querySelector("button.btn.btn-primary.ms-2");
-    console.log(submitButton);
     submitButton.disabled = false;
 
     createModalWindow();
@@ -143,7 +137,6 @@ function selectUrn(storage) {
                 ?.textContent.includes(storage.urnChoice)
         );
         if (urnButton) {
-            console.log(urnButton);
             clearInterval(intervalId); // Stop the loop when the condition is met
             urnButton.click();
 

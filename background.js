@@ -1,27 +1,17 @@
-console.log("Background Script Running");
-/* chrome.tabs.onUpdated.addListener((tabId, tab) => {
-    console.log('listener added');
-    // console.log(tab);
-    if (tab.url && tab.url.includes("jotform.com/inbox/")) {
-        // console.log('message sent');
-        chrome.tabs.sendMessage(tabId, {
-            action: 'createFormButton',
-            type: "NEW"
-        })
-    }
-}); */
-
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     // Check if the page is fully loaded
     chrome.storage.local.get(["jotformFormId"], function (result) {
         const jotformFormId = result.jotformFormId;
-        console.log("Retrieved JotForm form ID: " + jotformFormId);
+        console.log(
+            "%cRetrieved JotForm form ID: ",
+            "color: green;",
+            jotformFormId
+        );
         if (
             changeInfo.status === "complete" &&
             tab.url &&
             tab.url.includes(`jotform.com/inbox/${jotformFormId}`)
         ) {
-            console.log("listener added");
             chrome.tabs.sendMessage(tabId, {
                 action: "createFormButton",
                 type: "NEW",
@@ -59,11 +49,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "getJotFormSubmissionData") {
         const submissionId = message.submissionId;
-        // const apiKey = '4e5ec9c3461e2bfa62f97b7a8f504aa7'; // Replace with your actual API key
 
         chrome.storage.local.get(["jotformToken"], function (result) {
             const jotformToken = result.jotformToken;
-            console.log("Retrieved JotForm token: " + jotformToken);
+            console.log(
+                "%cRetrieved JotForm token: ",
+                "color: green",
+                jotformToken
+            );
 
             fetch(
                 `https://api.jotform.com/submission/${submissionId}?apiKey=${jotformToken}`
@@ -74,11 +67,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     submissionData =
                         gatherAdditionalPetInformation(submissionData);
                     submissionData.submissionDate = data.content.created_at;
-                    console.log(submissionData);
+                    console.log(
+                        "%cSubmission Data Retrieved Succesfully:",
+                        "color: green",
+                        submissionData
+                    );
                     const formattedDate = new Date(
                         submissionData.dateOf6["datetime"]
                     ).toLocaleString();
-                    console.log(formattedDate);
 
                     storeJotformData(submissionData);
 
@@ -127,7 +123,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                 return;
                             }
                             console.log(
-                                "Gmail draft created successfully:",
+                                "%cGmail draft created successfully:",
+                                "color: green",
                                 response
                             );
                             draftId = response.id;
@@ -147,7 +144,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         function (newDocId) {
                             copiedDocId = newDocId;
                             console.log(
-                                "New document created with ID:",
+                                "%cNew document created with ID:",
+                                "color: green",
                                 newDocId
                             );
 
@@ -161,7 +159,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     );
                 })
                 .catch((error) => {
-                    // console.error('JotForm API Error:', error);
                     sendResponse({ success: false, error: error });
                 });
         });
@@ -200,22 +197,6 @@ function extractFormData(submissionData) {
     return formData;
 }
 
-/* function splitFullName(fullName) {
-  // Trim any extra spaces from the input
-  fullName = fullName.trim();
-
-  // Split the name into an array of words
-  const nameParts = fullName.split(" ");
-
-  // Extract the last name (last word in the array)
-  const lastName = nameParts.pop();
-
-  // The rest of the array (joined back together) is the first name
-  const firstName = nameParts.join(" ");
-
-  return { firstName, lastName };
-} */
-
 function storeJotformData(submissionData) {
     // should probably make address line 2 with city state and postal code.
     chrome.storage.local.set(
@@ -246,8 +227,6 @@ function storeJotformData(submissionData) {
 }
 
 function gatherAdditionalPetInformation(submissionData) {
-    // const additionalData = {};
-
     const { species, sex } = submissionData;
     let cuteSpecies, pronoun1, pronoun2;
 
@@ -289,7 +268,6 @@ function authenticateGoogle(callback) {
             console.error(chrome.runtime.lastError);
             return;
         }
-
         // Remove the cached token to force re-authentication
         chrome.identity.removeCachedAuthToken({ token: token }, function() {
             // Get a new token
@@ -301,29 +279,6 @@ function authenticateGoogle(callback) {
                 callback(newToken);
             });
         });
-    });
-} */
-
-/* function authenticate(callback) {
-    chrome.identity.getAuthToken({ interactive: true }, function(token) {
-        if (chrome.runtime.lastError || !token) {
-            console.error(chrome.runtime.lastError);
-            return;
-        }
-
-        // Verify if the token has the required scopes
-        fetch('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=' + token)
-            .then(response => response.json())
-            .then(data => {
-                if (data.scope && data.scope.includes('https://www.googleapis.com/auth/drive')) {
-                    callback(token);
-                } else {
-                    // Revoke token if scopes are insufficient and request a new one
-                    chrome.identity.removeCachedAuthToken({ token: token }, function() {
-                        authenticate(callback); // Re-authenticate after removing the token
-                    });
-                }
-            });
     });
 } */
 
@@ -363,7 +318,7 @@ function createGoogleDoc(callback) {
                 console.error("Error creating document:", error);
                 return;
             }
-            console.log("Document created:", response);
+            console.log("%cDocument created:", "color: green", response);
             callback(response);
         });
     });
@@ -379,7 +334,10 @@ function deleteDocument(docId) {
         })
             .then((response) => {
                 if (response.ok) {
-                    console.log("Document deleted successfully");
+                    console.log(
+                        "%cDocument deleted successfully",
+                        "color: green"
+                    );
                 } else {
                     console.error("Failed to delete document");
                 }
@@ -400,7 +358,11 @@ function copyTemplate(templateDocId, title, callback) {
                 console.error("Error copying template:", error);
                 return;
             }
-            console.log("Document copied:", response);
+            console.log(
+                "%cDocument copied successfully:",
+                "color: green",
+                response
+            );
             callback(response.id); // Get the new document's ID
         });
     });
@@ -427,7 +389,7 @@ function replaceTextInDocument(docId, replacements, callback) {
                 console.error("Error replacing text:", error);
                 return;
             }
-            console.log("Text replaced:", response);
+            console.log("%cText replaced:", "color: green", response);
             callback(response);
         });
     });
@@ -440,42 +402,6 @@ function createDocFromTemplate(templateDocId, title, replacements, callback) {
         });
     });
 }
-
-// Raw text email
-/* function sendGmailDraft(to, subject, body, callback) {
-    authenticate(function(token) {
-        const url = 'https://gmail.googleapis.com/gmail/v1/users/me/drafts';
-
-        // Construct the raw email content
-        const email = [
-            `To: ${to}`,
-            `Subject: ${subject}`,
-            '',
-            body
-        ].join('\r\n'); // Use CRLF (\r\n) as per RFC 5322
-
-        // Encode the email in base64url format
-        const base64EncodedEmail = btoa(unescape(encodeURIComponent(email)))
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=+$/, '');
-
-        const data = {
-            message: {
-                raw: base64EncodedEmail
-            }
-        };
-
-        makeApiCall(url, 'POST', data, token, function(error, response) {
-            if (error) {
-                console.error('Error creating Gmail draft:', error);
-                return;
-            }
-            console.log('Draft created:', response);
-            callback(response);
-        });
-    });
-} */
 
 //HTML email
 function sendGmailDraft(to, subject, body, callback) {
@@ -513,53 +439,8 @@ function sendGmailDraft(to, subject, body, callback) {
                 console.error("Error creating Gmail draft:", error);
                 return callback(error);
             }
-            console.log("Draft created:", response);
+            console.log("%cDraft created:", "color: green", response);
             callback(null, response);
         });
     });
 }
-
-/* function postGmailDraft(to, subject, body) {
-    authenticate(function(token) {
-        const email = `
-            To: ${to}
-            Subject: ${subject}
-
-            ${body}
-        `;
-        const base64EncodedEmail = btoa(unescape(encodeURIComponent(email)))
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=+$/, '');
-
-        post({
-            url: 'https://gmail.googleapis.com/gmail/v1/users/me/drafts',
-            token: token,
-            data: {
-                message: {
-                    raw: base64EncodedEmail
-                }
-            },
-            callback: function(response) {
-                console.log('Draft created:', response);
-            }
-        });
-    });
-}
-
-function post(options) {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                options.callback(JSON.parse(xhr.responseText));
-            } else {
-                console.error('post', xhr.readyState, xhr.status, xhr.responseText);
-            }
-        }
-    };
-    xhr.open("POST", options.url, true);
-    xhr.setRequestHeader('Authorization', 'Bearer ' + options.token);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(JSON.stringify(options.data));
-} */
