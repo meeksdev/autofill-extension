@@ -14,7 +14,14 @@ const petAndOwnerKeys = [
     "clientAddress2",
 ];
 // const bundlesKeys = [];
-// const urnKeys = [];
+const urnKeys = [
+    "urnChoice",
+    "isUrnEngraved",
+    "urnLine1",
+    "urnLine2",
+    "urnLine3",
+    "urnLine4",
+];
 // const memorialKeys = [];
 
 chrome.runtime.onMessage.addListener((message, sender, response) => {
@@ -22,19 +29,22 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
     if (type === "NEW") {
         if (action === "fillPetAndOwnerForm") {
             // Set up the interval to run every second
+            let iterationCount = 0;
             const intervalId = setInterval(() => {
                 const form = document.forms[0];
                 if (form) {
-                    clearInterval(intervalId); // Stop the loop when the condition is met
                     getStoredData(petAndOwnerKeys, (storage) => {
                         fillPetAndOwnerForm(form, storage);
                     });
                 }
             }, 100);
+        } else if (action === "fillBundlesForm") {
         } else if (action === "selectUrn") {
-            getStoredData(["urnChoice"], (storage) => {
+            getStoredData(urnKeys, (storage) => {
                 selectUrn(storage);
             });
+        } else if (action === "fillMemorialForm") {
+        } else if (action === "fillReviewForm") {
         }
     }
 });
@@ -51,6 +61,7 @@ function getStoredData(keys, callback) {
     });
 }
 
+/*** PET AND OWNER PAGE ***/
 function fillPetAndOwnerForm(form, storage) {
     // Loop through each input element in the form and log its name
     /* console.log(form.elements.length);
@@ -121,29 +132,134 @@ for (let i = 0; i < form.elements.length; i++) {
     form["address1"].value = storage.clientAddress1;
     form["address2"].value = storage.clientAddress2;
 
-    const submitButton = document.querySelector("button.btn.btn-primary.ms-2");
-    submitButton.disabled = false;
+    //go to the next page
+    const nextPageButton = document.querySelector(
+        "button.btn.btn-primary.ms-2"
+    );
+    nextPageButton.click();
 
-    createModalWindow();
+    // createModalWindow();
 }
 
+/*** BUNDLED PRODUCTS PAGE ***/
+function fillBundlesForm(form, storage) {
+    //go to the next page
+    const nextPageButton = document.querySelector(
+        "button.btn.btn-primary.ms-2"
+    );
+    nextPageButton.click();
+}
+
+/*** URN PAGE ***/
 function selectUrn(storage) {
-    const intervalId = setInterval(() => {
-        const urnButton = [
-            ...document.querySelectorAll("div[role=button]"),
-        ].find((div) =>
-            div
-                .querySelector(".item-name")
-                ?.textContent.includes(storage.urnChoice)
-        );
-        if (urnButton) {
-            clearInterval(intervalId); // Stop the loop when the condition is met
+    console.log("selectUrn");
+    waitForCondition(
+        () => {
+            const urnButton = [
+                ...document.querySelectorAll("div[role=button]"),
+            ].find((div) =>
+                div
+                    .querySelector(".item-name")
+                    ?.textContent.includes(storage.urnChoice)
+            );
+            return urnButton;
+        },
+        (urnButton) => {
             urnButton.click();
 
-            // Additional
+            // if (storage.urnChoice === "Serenity Photo Standard Urn") {
+            // }
+
+            waitForCondition(
+                () => document.querySelector("div[class=modal-content]"),
+                (urnWindow) => {
+                    console.log(urnWindow);
+
+                    /* // Hand-Carved, Serenity, Remembrance Standard, Both Decorative Metal Urns,
+                    if (storage.urnChoice === "Serenity Photo Standard Urn") {
+                        // check if line 1 and line 2 are not blank, and if so change the values in the form.
+                        if (
+                            storage.urnLine1 !== "" ||
+                            storage.urnLine2 !== ""
+                        ) {
+                        }
+                    } else if (
+                        storage.urnChoice === "Cedar Memorial Standard Urn"
+                    )  */
+                    // {
+                    const query = storage.isUrnEngraved
+                        ? "div.product-offering-item.my-3"
+                        : "div.product-offering-item.my-3.active";
+                    waitForCondition(
+                        () => urnWindow.querySelector(query),
+                        (engravedStyleButton) => {
+                            console.log(engravedStyleButton);
+                            engravedStyleButton.click();
+
+                            console.log(
+                                storage.urnLine1,
+                                storage.urnLine2,
+                                storage.urnLine3,
+                                storage.urnLine4
+                            );
+
+                            // check if line 1 and line 2 are not blank, and if so change the values in the form.
+                            if (
+                                storage.urnLine1 !== "" ||
+                                storage.urnLine2 !== "" ||
+                                storage.urnLine3 !== "" ||
+                                storage.urnLine4 !== ""
+                            ) {
+                                const line1 = urnWindow.querySelector(
+                                    "input[placeholder='Line 1']"
+                                );
+                                if (line1) line1.value = storage.urnLine1;
+
+                                const line2 = urnWindow.querySelector(
+                                    "input[placeholder='Line 2']"
+                                );
+                                if (line2) line2.value = storage.urnLine2;
+
+                                if (storage.isUrnEngraved) {
+                                    const line3 = urnWindow.querySelector(
+                                        "input[placeholder='Line 3']"
+                                    );
+                                    if (line3) line3.value = storage.urnLine3;
+
+                                    const line4 = urnWindow.querySelector(
+                                        "input[placeholder='Line 4']"
+                                    );
+                                    if (line4) line4.value = storage.urnLine4;
+                                }
+                            }
+
+                            const addUrnButton = urnWindow.querySelector(
+                                "button.btn.btn-primary"
+                            );
+                            console.log(addUrnButton);
+                            // addUrnButton.click();
+                        }
+                    );
+                    // }
+
+                    // Do nothing for Scattering tube, Satin
+                }
+            );
         }
-    }, 100);
+    );
 }
+
+/*** MEMORIAL PRODUCTS PAGE ***/
+function fillMemorialForm(form, storage) {
+    //go to the next page
+    const nextPageButton = document.querySelector(
+        "button.btn.btn-primary.ms-2"
+    );
+    nextPageButton.click();
+}
+
+/*** REVIEW SUMMARY PAGE ***/
+function fillReviewSummaryPage(form, storage) {}
 
 function createModalWindow() {
     // Create modal/popup element
@@ -203,4 +319,30 @@ function separateValueAndUnits(input) {
             unitOfMeasure: null,
         };
     }
+}
+
+function waitForCondition(
+    checkCondition,
+    onSuccess,
+    intervalTime = 100,
+    maxWaitTime = 60000
+) {
+    const startTime = Date.now();
+
+    const intervalId = setInterval(() => {
+        const elapsedTime = Date.now() - startTime;
+        const result = checkCondition(); // Store the result of the condition check
+
+        // If condition is met, stop the interval and pass the result to the success action
+        if (result) {
+            clearInterval(intervalId);
+            onSuccess(result); // Pass the found element to onSuccess
+        }
+
+        // If maximum wait time has been exceeded, stop the interval
+        if (elapsedTime >= maxWaitTime) {
+            clearInterval(intervalId);
+            console.warn("Max wait time exceeded.");
+        }
+    }, intervalTime);
 }

@@ -100,7 +100,8 @@ function createFormButtonModal() {
                         `https://mail.google.com/mail/u/0/#drafts/${response.draftId}`,
                         "_blank"
                     );
-                    printGoogleDoc(response.docId);
+                    printGoogleDoc(response.letterDocId);
+                    printGoogleDoc(response.envelopeDocId);
                 } else {
                     console.error(
                         "Failed to fetch JotForm data:",

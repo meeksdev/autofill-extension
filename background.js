@@ -41,6 +41,11 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                     action: "fillMemorialForm",
                     type: "NEW",
                 });
+            } else if (tab.url.includes(`(details:review)`)) {
+                chrome.tabs.sendMessage(tabId, {
+                    action: "fillReviewForm",
+                    type: "NEW",
+                });
             }
         }
     });
@@ -50,118 +55,101 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "getJotFormSubmissionData") {
         const submissionId = message.submissionId;
 
-        chrome.storage.local.get(["jotformToken"], function (result) {
-            const jotformToken = result.jotformToken;
-            console.log(
-                "%cRetrieved JotForm token: ",
-                "color: green",
-                jotformToken
-            );
+        chrome.storage.local.get(
+            ["jotformToken", "letterTemplateId", "envelopeTemplateId"],
+            function (result) {
+                const jotformToken = result.jotformToken;
+                const letterTemplateId = result.letterTemplateId;
+                const envelopeTemplateId = result.envelopeTemplateId;
+                console.log(
+                    "%cRetrieved JotForm token: ",
+                    "color: green",
+                    jotformToken
+                );
 
-            fetch(
-                `https://api.jotform.com/submission/${submissionId}?apiKey=${jotformToken}`
-            )
-                .then((response) => response.json())
-                .then((data) => {
-                    let submissionData = extractFormData(data.content.answers);
-                    submissionData =
-                        gatherAdditionalPetInformation(submissionData);
-                    submissionData.submissionDate = data.content.created_at;
-                    console.log(
-                        "%cSubmission Data Retrieved Succesfully:",
-                        "color: green",
-                        submissionData
-                    );
-                    const formattedDate = new Date(
-                        submissionData.dateOf6["datetime"]
-                    ).toLocaleString();
-
-                    storeJotformData(submissionData);
-
-                    const emailBody = `
-                        <p style="margin: 0";>Patient: ${
-                            submissionData.nameOf
-                        }</p>
-                        <p style="margin: 0";>Date of Scheduled Appointment: ${formattedDate}</p>
-                        <p style="margin: 0";>Client Name: ${
-                            submissionData.clientName["first"]
-                        } ${submissionData.clientName["last"]}</p>
-                        <p style="margin: 0";>Address: ${
-                            submissionData.address["addr_line1"]
-                        }</p>
-                        <p style="margin: 0";>         ${submissionData.address[
-                            "city"
-                        ].trim()}, ${submissionData.address["state"]}, ${
-                        submissionData.address["postal"]
-                    }</p>
-                        <p style="margin: 0";>Phone Number: ${
-                            submissionData.phoneNumber["full"]
-                        }</p>
-
-                        <p style="margin: 32px 0";><strong>Pet’s ashes and/or memorial products will be delivered to your hospital by West Coast Pet Memorial. Please call the owner when they are ready to be picked-up.</strong></p>
-
-                        <p style="margin: 16px 0";>Dear Doctors and Staff,</p>
-
-                        <p style="margin: 16px 0";>I regret to inform you of the passing of our mutual patient, ${
-                            submissionData.nameOf
-                        }, who was humanely euthanized in the comfort of home due to declining quality of life. My condolences for the loss of your patient.<p>
-
-                        <p style="margin: 16px 0";>I sincerely appreciate your referral and time. Please do not hesitate to contact me with any questions.</p>
-                    `;
-                    let draftId;
-                    sendGmailDraft(
-                        "EnterHospitalEmail@gmail.com",
-                        `${submissionData.nameOf}'s Passing`,
-                        emailBody,
-                        function (error, response) {
-                            if (error) {
-                                console.error(
-                                    "Failed to create Gmail draft:",
-                                    error.message
-                                );
-                                // Handle the error (e.g., show an error message to the user)
-                                return;
-                            }
-                            console.log(
-                                "%cGmail draft created successfully:",
-                                "color: green",
-                                response
+                fetch(
+                    `https://api.jotform.com/submission/${submissionId}?apiKey=${jotformToken}`
+                )
+                    .then((response) => response.json())
+                    .then(handleData)
+                    .then(storeJotformData)
+                    .then(createAndSendGmailDraft)
+                    .then((data) => {
+                        return new Promise((resolve, reject) => {
+                            console.log("creating letter");
+                            // let copiedLetterDocId;
+                            createDocFromTemplate(
+                                letterTemplateId,
+                                `(Letter) ${data.nameOf}\'s Passing ${data.submissionDate}`,
+                                {
+                                    familyName: data.clientName["last"],
+                                    NameOfPet: data.nameOf,
+                                    species: data.cuteSpecies,
+                                    pronoun1: data.pronoun1,
+                                    pronoun2: data.pronoun2,
+                                },
+                                function (newDocId) {
+                                    // copiedLetterDocId = newDocId;
+                                    console.log(
+                                        "%cNew document created with ID:",
+                                        "color: green",
+                                        newDocId
+                                    );
+                                    resolve({
+                                        data,
+                                        copiedLetterDocId: newDocId,
+                                    });
+                                }
                             );
-                            draftId = response.id;
-                        }
-                    );
-
-                    let copiedDocId;
-                    createDocFromTemplate(
-                        "1dQthwmn36E_eIrBKiXn-47rxqtfjTr8AGzyXjXYFNp4",
-                        `${submissionData.nameOf}\'s Passing ${submissionData.submissionDate}`,
-                        {
-                            NameOfPet: submissionData.nameOf,
-                            species: submissionData.cuteSpecies,
-                            pronoun1: submissionData.pronoun1,
-                            pronoun2: submissionData.pronoun2,
-                        },
-                        function (newDocId) {
-                            copiedDocId = newDocId;
-                            console.log(
-                                "%cNew document created with ID:",
-                                "color: green",
-                                newDocId
+                        });
+                        // return data;
+                    })
+                    .then(({ data, copiedLetterDocId }) => {
+                        return new Promise((resolve, reject) => {
+                            console.log("creating envelope");
+                            // let copiedEnvelopeDocId;
+                            createDocFromTemplate(
+                                envelopeTemplateId,
+                                `(Envelope) ${data.nameOf}\'s Passing ${data.submissionDate}`,
+                                {
+                                    familyName: data.clientName["last"],
+                                    AddressLine1: data.address["addr_line1"],
+                                    AddressLine2: data.cityStatePostal,
+                                    AddressLine3: "",
+                                },
+                                function (newDocId) {
+                                    // copiedEnvelopeDocId = newDocId;
+                                    console.log(
+                                        "%cNew document created with ID:",
+                                        "color: green",
+                                        newDocId
+                                    );
+                                    resolve({
+                                        data,
+                                        copiedLetterDocId,
+                                        copiedEnvelopeDocId: newDocId,
+                                    });
+                                }
                             );
-
+                        });
+                        // return data;
+                    })
+                    .then(
+                        ({ data, copiedLetterDocId, copiedEnvelopeDocId }) => {
                             sendResponse({
                                 success: true,
                                 data: data,
-                                docId: copiedDocId,
-                                draftId: draftId,
+                                letterDocId: copiedLetterDocId,
+                                envelopeDocId: copiedEnvelopeDocId,
+                                // draftId: draftId,
                             });
                         }
-                    );
-                })
-                .catch((error) => {
-                    sendResponse({ success: false, error: error });
-                });
-        });
+                    )
+                    .catch((error) => {
+                        sendResponse({ success: false, error: error });
+                    });
+            }
+        );
 
         return true; // Keep the messaging channel open for async response
     } else if (message.action === "openAndPrintDoc") {
@@ -185,49 +173,162 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
-function extractFormData(submissionData) {
+function createAndSendGmailDraft(data) {
+    const formattedDate = new Date(data.dateOf6["datetime"]).toLocaleString();
+
+    const emailBody = `
+    <p style="margin: 0";>Patient: ${data.nameOf}</p>
+    <p style="margin: 0";>Date of Scheduled Appointment: ${formattedDate}</p>
+    <p style="margin: 0";>Client Name: ${data.clientName["first"]} ${data.clientName["last"]}</p>
+    <p style="margin: 0";>Address: ${data.address["addr_line1"]}</p>
+    <p style="margin: 0";>         ${data.cityStatePostal}</p>
+    <p style="margin: 0";>Phone Number: ${data.phoneNumber["full"]}</p>
+
+    <p style="margin: 32px 0";><strong>Pet’s ashes and/or memorial products will be delivered to your hospital by West Coast Pet Memorial. Please call the owner when they are ready to be picked-up.</strong></p>
+
+    <p style="margin: 16px 0";>Dear Doctors and Staff,</p>
+
+    <p style="margin: 16px 0";>I regret to inform you of the passing of our mutual patient, ${data.nameOf}, who was humanely euthanized in the comfort of home due to declining quality of life. My condolences for the loss of your patient.<p>
+
+    <p style="margin: 16px 0";>I sincerely appreciate your referral and time. Please do not hesitate to contact me with any questions.</p>
+`;
+    let draftId;
+    sendGmailDraft(
+        "EnterHospitalEmail@gmail.com",
+        `Notification of Euthanasia`,
+        emailBody,
+        function (error, response) {
+            if (error) {
+                console.error("Failed to create Gmail draft:", error.message);
+                // Handle the error (e.g., show an error message to the user)
+                return;
+            }
+            console.log(
+                "%cGmail draft created successfully:",
+                "color: green",
+                response
+            );
+            draftId = response.id;
+        }
+    );
+
+    return data;
+}
+
+function handleData(data) {
+    let submissionData = extractFormData(data.content.answers);
+    submissionData = gatherAdditionalInformation(submissionData);
+    submissionData.submissionDate = data.content.created_at;
+    console.log(
+        "%cSubmission Data Retrieved Succesfully:",
+        "color: green",
+        submissionData
+    );
+    return submissionData;
+}
+
+function extractFormData(data) {
     const formData = {};
 
-    Object.values(submissionData).forEach((field) => {
+    Object.values(data).forEach((field) => {
         if (field.name && field.answer) {
-            formData[field.name] = field.answer;
+            if (typeof field.answer === "string") {
+                formData[field.name] = field.answer.trim();
+            } else if (
+                typeof field.answer === "object" &&
+                field.answer !== null
+            ) {
+                Object.entries(field.answer).forEach(([key, value]) => {
+                    field.answer[key] = value.trim();
+                });
+                formData[field.name] = field.answer;
+            } else {
+                formData[field.name] = field.answer;
+            }
         }
     });
 
     return formData;
 }
 
-function storeJotformData(submissionData) {
+function storeJotformData(data) {
+    console.log("storeJotformData");
+    let isUrnEngraved = false;
+    let urnLine1 = "",
+        urnLine2 = "",
+        urnLine3 = "",
+        urnLine4 = "";
+
+    if (
+        data.engravingLine1 ||
+        data.engravingLine2 ||
+        data.engravingLine3 ||
+        data.engravingLine4
+    ) {
+        isUrnEngraved = true;
+        urnLine1 = data.engravingLine1;
+        urnLine2 = data.engravingLine2;
+        urnLine3 = data.engravingLine3;
+        urnLine4 = data.engravingLine4;
+    } else if (data.metalEngravingLine1 || data.metalEngravingLine2) {
+        urnLine1 = data.metalEngravingLine1;
+        urnLine2 = data.metalEngravingLine2;
+    } else if (data.namePlateLine1 || data.namePlateLine2) {
+        urnLine1 = data.namePlateLine1;
+        urnLine2 = data.namePlateLine2;
+    }
+
+    const pawOrNosePrint = data.privatePawOrNosePrint
+        ? data.privatePawOrNosePrint
+        : data.memorialPawOrNosePrint;
+
     // should probably make address line 2 with city state and postal code.
     chrome.storage.local.set(
         {
             // Pet and Owner Data
-            petName: submissionData.nameOf,
-            species: submissionData.species,
-            breed: submissionData.breed,
-            weight: submissionData.approximateWeight,
+            petName: data.nameOf,
+            species: data.species,
+            breed: data.breed,
+            weight: data.approximateWeight,
             //   birthDate,
-            passingDate: submissionData.dateOf6["datetime"],
-            sex: submissionData.sex,
-            clientFirstName: submissionData.clientName["first"],
-            clientLastName: submissionData.clientName["last"],
-            clientEmail: submissionData.email,
-            clientPhone: submissionData.phoneNumber["full"],
-            clientAddress1: submissionData.address["addr_line1"],
-            clientAddress2: submissionData.address["addr_line2"],
+            passingDate: data.dateOf6["datetime"],
+            sex: data.sex,
+            clientFirstName: data.clientName["first"],
+            clientLastName: data.clientName["last"],
+            clientEmail: data.email,
+            clientPhone: data.phoneNumber["full"],
+            clientAddress1: data.address["addr_line1"],
+            clientAddress2: data.address["addr_line2"],
 
             // Urn Data
-            urnChoice: submissionData.urnChoices,
+            urnChoice: data.urnChoices,
+            urnLine1: urnLine1,
+            urnLine2: urnLine2,
+            urnLine3: urnLine3,
+            urnLine4: urnLine4,
+            isUrnEngraved: isUrnEngraved,
+
+            pawOrNosePrint: pawOrNosePrint,
+
+            clayNosePrint: data.clayNosePrint,
+            clayPawPrint: data.clayPawPrint,
+
+            additionalBoxedFurClipping: data.additionalBoxedFurClipping,
+            additionalFurClipping: data.additionalFurClipping,
+            additionalNosePrint: data.additionalNosePrint,
+            additonalPawPrint: data.additonalPawPrint,
         },
         function () {
             // Notify that we saved the data
             statusMessage.textContent = "Data saved successfully!";
         }
     );
+
+    return data;
 }
 
-function gatherAdditionalPetInformation(submissionData) {
-    const { species, sex } = submissionData;
+function gatherAdditionalInformation(data) {
+    const { species, sex, address } = data;
     let cuteSpecies, pronoun1, pronoun2;
 
     if (species === "Dog") {
@@ -244,11 +345,13 @@ function gatherAdditionalPetInformation(submissionData) {
         pronoun2 = "she";
     }
 
-    submissionData.cuteSpecies = cuteSpecies;
-    submissionData.pronoun1 = pronoun1;
-    submissionData.pronoun2 = pronoun2;
+    data.cuteSpecies = cuteSpecies;
+    data.pronoun1 = pronoun1;
+    data.pronoun2 = pronoun2;
 
-    return submissionData;
+    data.cityStatePostal = `${address["city"]}, ${address["state"]} ${address["postal"]}`;
+
+    return data;
 }
 
 function authenticateGoogle(callback) {
@@ -371,6 +474,8 @@ function copyTemplate(templateDocId, title, callback) {
 function replaceTextInDocument(docId, replacements, callback) {
     authenticateGoogle(function (token) {
         const url = `https://docs.googleapis.com/v1/documents/${docId}:batchUpdate`;
+
+        console.log(replacements);
 
         const requests = Object.keys(replacements).map((key) => ({
             replaceAllText: {
