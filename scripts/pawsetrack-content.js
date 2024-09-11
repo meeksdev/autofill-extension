@@ -1,3 +1,8 @@
+// Prepare an event to notify the framework of the change
+const inputEvent = new Event("input", { bubbles: true });
+
+const pageCompletionKeys = [];
+
 const petAndOwnerKeys = [
     "petName",
     "species",
@@ -13,40 +18,61 @@ const petAndOwnerKeys = [
     "clientAddress1",
     "clientAddress2",
 ];
-// const bundlesKeys = [];
-const urnKeys = [
-    "urnChoice",
-    "isUrnEngraved",
-    "urnLine1",
-    "urnLine2",
-    "urnLine3",
-    "urnLine4",
+const bundlesKeys = ["pawOrNosePrint"];
+const urnKeys = ["urnChoice", "isUrnEngraved", "urnLine1", "urnLine2", "urnLine3", "urnLine4"];
+const memorialKeys = [
+    "clayNosePrint",
+    "clayPawPrint",
+    "additionalBoxedFurClipping",
+    "additionalFurClipping",
+    "additionalNosePrint",
+    "additionalPawPrint",
 ];
-// const memorialKeys = [];
+const reviewKeys = ["collectionLocation"];
 
 chrome.runtime.onMessage.addListener((message, sender, response) => {
     const { type, action } = message;
-    if (type === "NEW") {
-        if (action === "fillPetAndOwnerForm") {
-            // Set up the interval to run every second
-            let iterationCount = 0;
-            const intervalId = setInterval(() => {
-                const form = document.forms[0];
-                if (form) {
-                    getStoredData(petAndOwnerKeys, (storage) => {
-                        fillPetAndOwnerForm(form, storage);
-                    });
-                }
-            }, 100);
-        } else if (action === "fillBundlesForm") {
-        } else if (action === "selectUrn") {
-            getStoredData(urnKeys, (storage) => {
-                selectUrn(storage);
-            });
-        } else if (action === "fillMemorialForm") {
-        } else if (action === "fillReviewForm") {
+
+    getStoredData(["isAutofilling"], async ({ isAutofilling }) => {
+        if (!isAutofilling) {
+            return;
         }
-    }
+
+        if (type === "NEW") {
+            if (action === "startNewOrder") {
+                startNewOrder();
+            } else if (action === "selectCremationType") {
+                getStoredData(["cremationType"], ({ cremationType }) => {
+                    selectCremationType(cremationType);
+                });
+            } else if (action === "fillPetAndOwnerForm") {
+                const form = await waitForCondition(() => document.forms[0]);
+                getStoredData(petAndOwnerKeys, (storage) => {
+                    fillPetAndOwnerForm(form, storage);
+                });
+            } else if (action === "fillBundlesForm") {
+                getStoredData(bundlesKeys, (storage) => {
+                    fillBundlesForm(storage);
+                });
+            } else if (action === "selectUrn") {
+                getStoredData(urnKeys, (storage) => {
+                    selectUrn(storage);
+                });
+            } else if (action === "fillMemorialForm") {
+                getStoredData(memorialKeys, (storage) => {
+                    fillMemorialForm(storage);
+                });
+            } else if (action === "fillReviewForm") {
+                getStoredData(reviewKeys, (storage) => {
+                    fillReviewForm(storage);
+                });
+
+                chrome.storage.local.set({
+                    isAutofilling: false,
+                });
+            }
+        }
+    });
 });
 
 function getStoredData(keys, callback) {
@@ -61,8 +87,37 @@ function getStoredData(keys, callback) {
     });
 }
 
+/*** DASHBOARD PAGE ***/
+async function startNewOrder() {
+    console.log("startNewOrder");
+    const newOrderButton = await waitForCondition(() =>
+        [...document.querySelectorAll("button")].find((button) => button.textContent.includes("New Order"))
+    );
+    console.log(newOrderButton);
+    newOrderButton.click();
+}
+
+/*** START ORDER PAGE ***/
+async function selectCremationType(cremationType) {
+    console.log(cremationType);
+
+    if (cremationType === "Private") {
+        const cremationButton = await waitForCondition(() =>
+            [...document.querySelectorAll("div.service-selection")].find((div) => div.firstChild.textContent.includes("Private Cremation"))
+        );
+        console.log(cremationButton);
+        cremationButton.click();
+    } else if (cremationType === "Memorial") {
+        const cremationButton = await waitForCondition(() =>
+            [...document.querySelectorAll("div.service-selection")].find((div) => div.firstChild.textContent.includes("Communal Cremation"))
+        );
+        console.log(cremationButton);
+        cremationButton.click();
+    }
+}
+
 /*** PET AND OWNER PAGE ***/
-function fillPetAndOwnerForm(form, storage) {
+async function fillPetAndOwnerForm(form, storage) {
     // Loop through each input element in the form and log its name
     /* console.log(form.elements.length);
 for (let i = 0; i < form.elements.length; i++) {
@@ -72,44 +127,18 @@ for (let i = 0; i < form.elements.length; i++) {
     }
 } */
 
-    // Prepare an event to notify the framework of the change
-    const event = new Event("input", { bubbles: true });
-
-    // Species
-    const speciesInput = document.getElementById("typeahead-basic");
-    speciesInput.value = storage.species;
-
-    // Birth and Passing Dates
-    if (storage.birthdate) {
-        const birthdateInput = document.querySelector(
-            'input[placeholder="Date of Birth (yyyy-mm-dd)"]'
-        );
-        birthdateInput.value = storage.birthdate;
-    }
-    const passingDateInput = document.querySelector(
-        'input[placeholder="Date of Passing (yyyy-mm-dd)"]'
-    );
+    const passingDateInput = document.querySelector('input[placeholder="Date of Passing (yyyy-mm-dd)"]');
     passingDateInput.value = storage.passingDate.split(" ")[0];
+    passingDateInput.dispatchEvent(inputEvent);
 
     // Unit of Weight Measurement
-    const { unitOfMeasure, weightValue } = separateValueAndUnits(
-        storage.weight
-    );
-    const unitOfMeasureInput = document.querySelector(
-        'input[formcontrolname="unitOfMeasure"]'
-    );
-    if (unitOfMeasure === "lb" || unitOfMeasure === "lbs") {
-        const lbsButton = unitOfMeasureInput.nextElementSibling.lastChild;
-        lbsButton.click();
-    } else if (unitOfMeasure === "kg" || unitOfMeasure === "kgs") {
-        const kgButton = unitOfMeasureInput.nextElementSibling.firstChild;
-        kgButton.click();
-    }
+    // const { unitOfMeasure, weightValue } = separateValueAndUnits(storage.weight);
+    const unitOfMeasureInput = document.querySelector('input[formcontrolname="unitOfMeasure"]');
+    const lbsButton = unitOfMeasureInput.nextElementSibling.lastChild;
+    lbsButton.click();
 
     // Gender or Sex
-    const genderInput = document.querySelector(
-        'input[formcontrolname="gender"]'
-    );
+    const genderInput = document.querySelector('input[formcontrolname="gender"]');
     if (storage.sex === "Male") {
         const maleButton = genderInput.nextElementSibling.firstChild;
         maleButton.click();
@@ -120,146 +149,322 @@ for (let i = 0; i < form.elements.length; i++) {
 
     // Other form fields
     form["name"].value = storage.petName;
-    form["name"].dispatchEvent(event);
+    form["name"].dispatchEvent(inputEvent);
     form["description"].value = storage.breed;
-    form["inputtedWeight"].value = weightValue;
-    form["inputtedWeight"].dispatchEvent(event);
+    form["description"].dispatchEvent(inputEvent);
+    form["inputtedWeight"].value = storage.weight;
+    form["inputtedWeight"].dispatchEvent(inputEvent);
     form["firstName"].value = storage.clientFirstName;
+    form["firstName"].dispatchEvent(inputEvent);
     form["lastName"].value = storage.clientLastName;
-    form["lastName"].dispatchEvent(event);
+    form["lastName"].dispatchEvent(inputEvent);
     form["emailAddress"].value = storage.clientEmail;
+    form["emailAddress"].dispatchEvent(inputEvent);
     form["phoneNumber"].value = storage.clientPhone;
-    form["address1"].value = storage.clientAddress1;
-    form["address2"].value = storage.clientAddress2;
+    form["phoneNumber"].dispatchEvent(inputEvent);
+
+    // form["address2"].value = storage.clientAddress2;
+    // form["address2"].dispatchEvent(inputEvent);
+
+    // Species
+    const speciesInput = document.getElementById("typeahead-basic");
+    speciesInput.dispatchEvent(inputEvent);
+    const speciesDropdown = await waitForCondition(() => speciesInput.nextElementSibling);
+    console.log(speciesDropdown);
+    const speciesDropdownButton = await waitForCondition(() =>
+        [...speciesDropdown.querySelectorAll("*")].find((element) => element.textContent.includes(storage.species))
+    );
+    speciesDropdownButton.click();
+    await waitForCondition(() => !speciesDropdown.isConnected);
+
+    // const addressInput = document.forms[0]["address1"]
+    const addressInput = form["address1"];
+    console.log(addressInput);
+    addressInput.value = `${storage.clientAddress1}, ${storage.clientAddress2}`;
+    addressInput.dispatchEvent(new Event("focus"));
+    addressInput.dispatchEvent(new Event("input"));
+    await delay(500);
+    const keyboardEvent = new KeyboardEvent("keydown", { keyCode: 40 }); // Down arrow key
+    addressInput.dispatchEvent(keyboardEvent);
+    addressInput.dispatchEvent(new Event("blur"));
 
     //go to the next page
-    const nextPageButton = document.querySelector(
-        "button.btn.btn-primary.ms-2"
-    );
+    const nextPageButton = await waitForCondition(() => document.querySelector("button.btn.btn-primary.ms-2"));
+    await waitForCondition(() => nextPageButton.disabled === false);
     nextPageButton.click();
 
     // createModalWindow();
 }
 
 /*** BUNDLED PRODUCTS PAGE ***/
-function fillBundlesForm(form, storage) {
+async function fillBundlesForm(storage) {
+    if (storage.pawOrNosePrint === "Nose print") {
+        const editButton = await waitForCondition(() =>
+            [...document.querySelectorAll("button")].find((button) => button.textContent.includes("Edit"))
+        );
+        console.log(editButton);
+        editButton.click();
+
+        const specialInstructionsInput = await waitForCondition(() => document.getElementById("specialInstructions"));
+        console.log(specialInstructionsInput);
+        specialInstructionsInput.value = "INK NOSE PRINT";
+        specialInstructionsInput.dispatchEvent(inputEvent);
+
+        const updateButton = await waitForCondition(() =>
+            [...document.querySelectorAll("span")].find((span) => span.textContent.includes("Update"))?.closest("button")
+        );
+        console.log(updateButton);
+        updateButton.click();
+    }
+
     //go to the next page
-    const nextPageButton = document.querySelector(
-        "button.btn.btn-primary.ms-2"
-    );
+    const nextPageButton = document.querySelector("button.btn.btn-primary.ms-2");
     nextPageButton.click();
 }
 
 /*** URN PAGE ***/
-function selectUrn(storage) {
+async function selectUrn(storage) {
     console.log("selectUrn");
-    waitForCondition(
-        () => {
-            const urnButton = [
-                ...document.querySelectorAll("div[role=button]"),
-            ].find((div) =>
-                div
-                    .querySelector(".item-name")
-                    ?.textContent.includes(storage.urnChoice)
-            );
-            return urnButton;
-        },
-        (urnButton) => {
-            urnButton.click();
 
-            // if (storage.urnChoice === "Serenity Photo Standard Urn") {
-            // }
+    //go to the next page
+    const nextPageButton = document.querySelector("button.btn.btn-primary.ms-2");
 
-            waitForCondition(
-                () => document.querySelector("div[class=modal-content]"),
-                (urnWindow) => {
-                    console.log(urnWindow);
-
-                    /* // Hand-Carved, Serenity, Remembrance Standard, Both Decorative Metal Urns,
-                    if (storage.urnChoice === "Serenity Photo Standard Urn") {
-                        // check if line 1 and line 2 are not blank, and if so change the values in the form.
-                        if (
-                            storage.urnLine1 !== "" ||
-                            storage.urnLine2 !== ""
-                        ) {
-                        }
-                    } else if (
-                        storage.urnChoice === "Cedar Memorial Standard Urn"
-                    )  */
-                    // {
-                    const query = storage.isUrnEngraved
-                        ? "div.product-offering-item.my-3"
-                        : "div.product-offering-item.my-3.active";
-                    waitForCondition(
-                        () => urnWindow.querySelector(query),
-                        (engravedStyleButton) => {
-                            console.log(engravedStyleButton);
-                            engravedStyleButton.click();
-
-                            console.log(
-                                storage.urnLine1,
-                                storage.urnLine2,
-                                storage.urnLine3,
-                                storage.urnLine4
-                            );
-
-                            // check if line 1 and line 2 are not blank, and if so change the values in the form.
-                            if (
-                                storage.urnLine1 !== "" ||
-                                storage.urnLine2 !== "" ||
-                                storage.urnLine3 !== "" ||
-                                storage.urnLine4 !== ""
-                            ) {
-                                const line1 = urnWindow.querySelector(
-                                    "input[placeholder='Line 1']"
-                                );
-                                if (line1) line1.value = storage.urnLine1;
-
-                                const line2 = urnWindow.querySelector(
-                                    "input[placeholder='Line 2']"
-                                );
-                                if (line2) line2.value = storage.urnLine2;
-
-                                if (storage.isUrnEngraved) {
-                                    const line3 = urnWindow.querySelector(
-                                        "input[placeholder='Line 3']"
-                                    );
-                                    if (line3) line3.value = storage.urnLine3;
-
-                                    const line4 = urnWindow.querySelector(
-                                        "input[placeholder='Line 4']"
-                                    );
-                                    if (line4) line4.value = storage.urnLine4;
-                                }
-                            }
-
-                            const addUrnButton = urnWindow.querySelector(
-                                "button.btn.btn-primary"
-                            );
-                            console.log(addUrnButton);
-                            // addUrnButton.click();
-                        }
-                    );
-                    // }
-
-                    // Do nothing for Scattering tube, Satin
-                }
-            );
-        }
+    const urnButton = await waitForCondition(() =>
+        [...document.querySelectorAll("div[role=button]")].find((div) =>
+            div.querySelector(".item-name")?.textContent.includes(storage.urnChoice)
+        )
     );
+    urnButton.click();
+
+    const urnWindow = await waitForCondition(() => document.querySelector("div[class=modal-content]"));
+    console.log(urnWindow);
+
+    if (storage.urnChoice.includes("Decorative Metal Standard Urn")) {
+        const personalizeItemButton = await waitForCondition(() => {
+            const personalizeItemForm = [...urnWindow.querySelectorAll("span")]
+                .find((span) => span.textContent.includes("Personalize this item?"))
+                ?.closest("form"); // Get the closest form that contains the span
+            const personalizeItemButton = [...personalizeItemForm.querySelectorAll("button")].find((button) =>
+                button.textContent.includes("Yes")
+            );
+            return personalizeItemButton;
+        });
+        console.log(personalizeItemButton);
+        personalizeItemButton.click();
+    }
+
+    const query = storage.isUrnEngraved ? "div.product-offering-item.my-3" : "div.product-offering-item.my-3.active";
+    const engravedStyleButton = await waitForCondition(() => urnWindow.querySelector(query));
+    console.log(engravedStyleButton);
+    engravedStyleButton.click();
+
+    handleUrnText(storage, urnWindow);
+    await delay(250);
+
+    const productNotification = urnWindow.querySelector("input[formcontrolname='confirmWarning']");
+    console.log(productNotification);
+    if (productNotification) productNotification.click();
+
+    const addUrnButton = await waitForCondition(() => urnWindow.querySelector("button.btn.btn-primary"));
+    console.log(addUrnButton);
+    addUrnButton.click();
+
+    await waitForCondition(() => !urnWindow.isConnected);
+
+    nextPageButton.click();
+}
+
+async function handleUrnText(storage, urnWindow) {
+    console.log(storage.urnLine1, storage.urnLine2, storage.urnLine3, storage.urnLine4);
+
+    // check if line 1 and line 2 are not blank, and if so change the values in the form.
+    if (storage.urnLine1 !== "" || storage.urnLine2 !== "" || storage.urnLine3 !== "" || storage.urnLine4 !== "") {
+        const line1 = await waitForCondition(() => urnWindow.querySelector("input[placeholder='Line 1']"));
+        if (line1) {
+            line1.value = storage.urnLine1;
+            line1.dispatchEvent(inputEvent);
+        }
+
+        const line2 = await waitForCondition(() => urnWindow.querySelector("input[placeholder='Line 2']"));
+        if (line2) {
+            line2.value = storage.urnLine2;
+            line2.dispatchEvent(inputEvent);
+        }
+
+        if (storage.isUrnEngraved) {
+            const line3 = await waitForCondition(() => urnWindow.querySelector("input[placeholder='Line 3']"));
+            if (line3) {
+                line3.value = storage.urnLine3;
+                line3.dispatchEvent(inputEvent);
+            }
+
+            const line4 = await waitForCondition(() => urnWindow.querySelector("input[placeholder='Line 4']"));
+            if (line4) {
+                line4.value = storage.urnLine4;
+                line4.dispatchEvent(inputEvent);
+            }
+        }
+    }
 }
 
 /*** MEMORIAL PRODUCTS PAGE ***/
-function fillMemorialForm(form, storage) {
+async function fillMemorialForm(storage) {
+    // CLAY PAW PRINT
+    for (let i = 0; i < storage.clayPawPrint; i++) {
+        console.log("Add Clay Paw Print");
+
+        const specialServiceButton = await waitForCondition(() => {
+            return [...document.querySelectorAll("div[role=button]")].find((div) =>
+                div.querySelector(".item-name")?.textContent.includes("Clay Paw Print")
+            );
+        });
+        specialServiceButton.click();
+
+        const modal = await waitForCondition(() => document.querySelector("div[class='modal-content']"));
+
+        const personalizeItemButton = await waitForCondition(() =>
+            [...modal.querySelectorAll("button")].find((button) => button.textContent.includes("Yes"))
+        );
+        personalizeItemButton.click();
+
+        const addButton = await waitForCondition(() => {
+            return [...document.querySelectorAll("button")].find((button) => button.querySelector("span")?.textContent.includes("Add"));
+        });
+        await waitForCondition(() => addButton.disabled === false);
+        addButton.click();
+
+        await waitForCondition(() => !modal.isConnected);
+    }
+
+    // CLAY NOSE PRINT
+    for (let i = 0; i < storage.clayNosePrint; i++) {
+        console.log("Add Clay Nose Print");
+
+        const specialServiceButton = await waitForCondition(() => {
+            return [...document.querySelectorAll("div[role=button]")].find((div) =>
+                div.querySelector(".item-name")?.textContent.includes("Clay Paw Print")
+            );
+        });
+        specialServiceButton.click();
+
+        const modal = await waitForCondition(() => document.querySelector("div[class='modal-content']"));
+
+        const personalizeItemButton = await waitForCondition(() =>
+            [...modal.querySelectorAll("button")].find((button) => button.textContent.includes("Yes"))
+        );
+        personalizeItemButton.click();
+
+        const specialInstructions = await waitForCondition(() => document.getElementById("specialInstructions"));
+        specialInstructions.value = "CLAY NOSE PRINT";
+        specialInstructions.dispatchEvent(inputEvent);
+
+        const addButton = await waitForCondition(() => {
+            return [...document.querySelectorAll("button")].find((button) => button.querySelector("span")?.textContent.includes("Add"));
+        });
+        await waitForCondition(() => addButton.disabled === false);
+        addButton.click();
+
+        await waitForCondition(() => !modal.isConnected);
+    }
+
+    // ADDITIONAL BOXED FUR CLIPPING
+    for (let i = 0; i < storage.additionalBoxedFurClipping; i++) {
+        console.log("Add Boxed Fur Clipping");
+        // What do we do here since its supposed to be boxed??
+    }
+
+    // ADDITIONAL FUR CLIPPING
+    for (let i = 0; i < storage.additionalFurClipping; i++) {
+        console.log("Add Fur Clipping");
+
+        const specialServiceButton = await waitForCondition(() => {
+            return [...document.querySelectorAll("div[role=button]")].find((div) =>
+                div.querySelector(".item-name")?.textContent.includes("Fur Clipping")
+            );
+        });
+        specialServiceButton.click();
+
+        const modal = await waitForCondition(() => document.querySelector("div[class='modal-content']"));
+
+        const addButton = await waitForCondition(() => {
+            return [...document.querySelectorAll("button")].find((button) => button.querySelector("span")?.textContent.includes("Add"));
+        });
+        await waitForCondition(() => addButton.disabled === false);
+        addButton.click();
+
+        await waitForCondition(() => !modal.isConnected);
+    }
+
+    // ADDITIONAL NOSE PRINT
+    for (let i = 0; i < storage.additionalNosePrint; i++) {
+        console.log("Add Nose Print");
+
+        const specialServiceButton = await waitForCondition(() => {
+            return [...document.querySelectorAll("div[role=button]")].find((div) =>
+                div.querySelector(".item-name")?.textContent.includes("Ink Nose Print")
+            );
+        });
+        specialServiceButton.click();
+
+        const modal = await waitForCondition(() => document.querySelector("div[class='modal-content']"));
+
+        const addButton = await waitForCondition(() => {
+            return [...document.querySelectorAll("button")].find((button) => button.querySelector("span")?.textContent.includes("Add"));
+        });
+        await waitForCondition(() => addButton.disabled === false);
+        addButton.click();
+
+        await waitForCondition(() => !modal.isConnected);
+    }
+
+    // ADDITIONAL PAW PRINT
+    for (let i = 0; i < storage.additionalPawPrint; i++) {
+        console.log("Add Paw Print");
+
+        const specialServiceButton = await waitForCondition(() => {
+            return [...document.querySelectorAll("div[role=button]")].find((div) =>
+                div.querySelector(".item-name")?.textContent.includes("Ink Paw Print")
+            );
+        });
+        specialServiceButton.click();
+
+        const modal = await waitForCondition(() => document.querySelector("div[class='modal-content']"));
+
+        const addButton = await waitForCondition(() => {
+            return [...document.querySelectorAll("button")].find((button) => button.querySelector("span")?.textContent.includes("Add"));
+        });
+        await waitForCondition(() => addButton.disabled === false);
+        addButton.click();
+
+        await waitForCondition(() => !modal.isConnected);
+    }
+
     //go to the next page
-    const nextPageButton = document.querySelector(
-        "button.btn.btn-primary.ms-2"
-    );
+    const nextPageButton = document.querySelector("button.btn.btn-primary.ms-2");
     nextPageButton.click();
 }
 
 /*** REVIEW SUMMARY PAGE ***/
-function fillReviewSummaryPage(form, storage) {}
+async function fillReviewForm(storage) {
+    console.log("fillReviewForm");
+    console.log(storage.collectionLocation);
+
+    if (storage.collectionLocation === "Office") {
+        // Do Nothing
+    } else if (storage.collectionLocation === "Pick-up") {
+        const deliveryButton = await waitForCondition(() =>
+            [...document.querySelectorAll("button")].find((button) => button.textContent.includes("Pickup From Care Center"))
+        );
+        console.log(deliveryButton);
+        deliveryButton.click();
+    } else if (storage.collectionLocation === "Mailed") {
+        // What to do here?
+    } else if (storage.collectionLocation === "Sarena") {
+        // Do Nothing
+    }
+
+    createModalWindow();
+}
 
 function createModalWindow() {
     // Create modal/popup element
@@ -291,8 +496,7 @@ function createModalWindow() {
     closeButton.style.cursor = "pointer";
 
     const notificationText = document.createElement("p");
-    notificationText.innerHTML =
-        "<br><p>Form autofilled with last gathered Jotform Data.</p>";
+    notificationText.innerHTML = "<br><p>Form autofilled with last gathered Jotform Data.</p>";
 
     modal.appendChild(closeButton);
     modal.appendChild(notificationText);
@@ -304,45 +508,27 @@ function createModalWindow() {
     });
 }
 
-function separateValueAndUnits(input) {
-    const match = input.match(/(\d+\.?\d*)([a-zA-Z]+)/);
+function waitForCondition(checkCondition, intervalTime = 100, maxWaitTime = 60000) {
+    return new Promise((resolve, reject) => {
+        const startTime = Date.now();
 
-    if (match) {
-        return {
-            weightValue: parseFloat(match[1]), // The numeric value
-            unitOfMeasure: match[2], // The unit
-        };
-    } else {
-        // Handle cases where the input does not match the expected pattern
-        return {
-            weightValue: null,
-            unitOfMeasure: null,
-        };
-    }
+        const intervalId = setInterval(() => {
+            const elapsedTime = Date.now() - startTime;
+            const result = checkCondition();
+
+            if (result) {
+                clearInterval(intervalId);
+                resolve(result);
+            }
+
+            if (elapsedTime >= maxWaitTime) {
+                clearInterval(intervalId);
+                reject("Max wait time exceeded.");
+            }
+        }, intervalTime);
+    });
 }
 
-function waitForCondition(
-    checkCondition,
-    onSuccess,
-    intervalTime = 100,
-    maxWaitTime = 60000
-) {
-    const startTime = Date.now();
-
-    const intervalId = setInterval(() => {
-        const elapsedTime = Date.now() - startTime;
-        const result = checkCondition(); // Store the result of the condition check
-
-        // If condition is met, stop the interval and pass the result to the success action
-        if (result) {
-            clearInterval(intervalId);
-            onSuccess(result); // Pass the found element to onSuccess
-        }
-
-        // If maximum wait time has been exceeded, stop the interval
-        if (elapsedTime >= maxWaitTime) {
-            clearInterval(intervalId);
-            console.warn("Max wait time exceeded.");
-        }
-    }, intervalTime);
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }

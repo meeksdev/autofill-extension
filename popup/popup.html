@@ -3,31 +3,79 @@
         <link rel="stylesheet" href="popup.css" />
     </head>
     <body>
-        <div class="input-group">
-            <label>Jotform API Key:</label>
-            <input type="text" id="jotformToken" placeholder="Enter API key" />
-        </div>
-        <div class="input-group">
-            <label>Jotform Form ID:</label>
-            <input type="text" id="jotformFormId" placeholder="Enter Form ID" />
-        </div>
+        <section>
+            <h1>Required Settings</h1>
+            <div class="input-group">
+                <label>Jotform API Key:</label>
+                <input type="text" id="jotformToken" placeholder="Enter API key" />
+            </div>
+            <div class="input-group">
+                <label>Jotform Form ID:</label>
+                <input type="text" id="jotformFormId" placeholder="Enter Form ID" />
+            </div>
 
-        <div class="input-group">
-            <label>Google Doc Letter Template ID:</label>
-            <input
-                type="text"
-                id="letterTemplateId"
-                placeholder="Enter Letter Template ID"
-            />
-        </div>
-        <div class="input-group">
-            <label>Google Doc Envelope Template ID:</label>
-            <input
-                type="text"
-                id="envelopeTemplateId"
-                placeholder="Enter Envelope Template ID"
-            />
-        </div>
+            <div class="input-group">
+                <label>Google Doc Letter Template ID:</label>
+                <input type="text" id="letterTemplateId" placeholder="Enter Letter Template ID" />
+            </div>
+            <div class="input-group">
+                <label>Google Doc Envelope Template ID:</label>
+                <input type="text" id="envelopeTemplateId" placeholder="Enter Envelope Template ID" />
+            </div>
+            <div class="input-group">
+                <label>Google Doc Invoice Template ID:</label>
+                <input type="text" id="invoiceTemplateId" placeholder="Enter Invoice Template ID" />
+            </div>
+        </section>
+        <section>
+            <h1>Invoice Settings</h1>
+            <div class="input-group">
+                <label>In-Home Euthanasia Price:</label>
+                <span>$<input type="number" step="0.01" id="euthanasiaPrice" placeholder="Enter Price in USD" /></span>
+            </div>
+            <div class="input-group">
+                <label>Private Cremation Price (Under 80 lbs):</label>
+                <span>$<input type="number" step="0.01" id="smallPrivateCremationPrice" placeholder="Enter Price in USD" /></span>
+            </div>
+            <div class="input-group">
+                <label>Private Cremation Price (Over 80 lbs):</label>
+                <span>$<input type="number" step="0.01" id="largePrivateCremationPrice" placeholder="Enter Price in USD" /></span>
+            </div>
+            <div class="input-group">
+                <label>Memorial Cremation Price (Under 80 lbs):</label>
+                <span>$<input type="number" step="0.01" id="smallMemorialCremationPrice" placeholder="Enter Price in USD" /></span>
+            </div>
+            <div class="input-group">
+                <label>Memorial Cremation Price (Over 80 lbs):</label>
+                <span>$<input type="number" step="0.01" id="largeMemorialCremationPrice" placeholder="Enter Price in USD" /></span>
+            </div>
+
+            <h3>Special Products</h3>
+            <div class="input-group">
+                <label>Fur Clipping Price:</label>
+                <span>$<input type="number" step="0.01" id="furPrice" placeholder="Enter Price in USD" /></span>
+            </div>
+            <div class="input-group">
+                <label>Fur Clipping + Paw Impression Box Price:</label>
+                <span>$<input type="number" step="0.01" id="furAndBoxPrice" placeholder="Enter Price in USD" /></span>
+            </div>
+            <div class="input-group">
+                <label>Clay Paw Print Price:</label>
+                <span>$<input type="number" step="0.01" id="clayPawPrice" placeholder="Enter Price in USD" /></span>
+            </div>
+            <div class="input-group">
+                <label>Clay Nose Print Price:</label>
+                <span>$<input type="number" step="0.01" id="clayNosePrice" placeholder="Enter Price in USD" /></span>
+            </div>
+            <div class="input-group">
+                <label>Additional Paw Print Price:</label>
+                <span>$<input type="number" step="0.01" id="pawPrintPrice" placeholder="Enter Price in USD" /></span>
+            </div>
+            <div class="input-group">
+                <label>Additional Nose Print Price:</label>
+                <span>$<input type="number" step="0.01" id="nosePrintPrice" placeholder="Enter Price in USD" /></span>
+            </div>
+        </section>
 
         <button id="saveButton">Save</button>
         <p id="statusMessage"></p>

@@ -12,6 +12,15 @@ function createFormButtonModal() {
     const existingAutofillModal = document.getElementById("AutofillModal");
     if (existingAutofillModal) {
         existingAutofillModal.style.display = "flex";
+
+        const gatherButton = document.getElementById("AutofillModal-GatherButton");
+        gatherButton.style.backgroundColor = "#4285f4";
+        gatherButton.style.cursor = "pointer";
+        gatherButton.disabled = false;
+
+        const loadingText = document.getElementById("autofillModal-LoadingText");
+        loadingText.style.display = "none";
+
         return; // Don't create a new modal if one already exists
     }
 
@@ -46,6 +55,7 @@ function createFormButtonModal() {
     gatherButton.style.borderRadius = "5px";
     gatherButton.style.cursor = "pointer";
     gatherButton.style.padding = "10px 20px";
+    gatherButton.id = "AutofillModal-GatherButton";
 
     // Add a close button to the modal
     const closeButton = document.createElement("div");
@@ -59,6 +69,7 @@ function createFormButtonModal() {
     const loadingText = document.createElement("p");
     loadingText.innerHTML = "Loading... Please wait...";
     loadingText.style.display = "none";
+    loadingText.id = "autofillModal-LoadingText";
 
     modal.appendChild(closeButton);
     modal.appendChild(step1Text);
@@ -81,38 +92,28 @@ function createFormButtonModal() {
         console.log("%cSubmission ID from URL:", "color: green", submissionId);
 
         // Send a message to the background script to fetch data from JotForm
-        chrome.runtime.sendMessage(
-            { action: "getJotFormSubmissionData", submissionId: submissionId },
-            function (response) {
-                if (response.success) {
-                    console.log(
-                        "%cForm Submission:",
-                        "color: green",
-                        response.data
-                    );
-                    modal.style.display = "none";
+        chrome.runtime.sendMessage({ action: "getJotFormSubmissionData", submissionId: submissionId }, async function (response) {
+            if (response.success) {
+                console.log("%cForm Submission:", "color: green", response.data);
+                modal.style.display = "none";
 
-                    window.open(
-                        `https://www.pawsetrack.vet/app/dashboard`,
-                        "_blank"
-                    );
-                    window.open(
-                        `https://mail.google.com/mail/u/0/#drafts/${response.draftId}`,
-                        "_blank"
-                    );
-                    printGoogleDoc(response.letterDocId);
-                    printGoogleDoc(response.envelopeDocId);
-                } else {
-                    console.error(
-                        "Failed to fetch JotForm data:",
-                        response.error
-                    );
-                    alert(
-                        "Failed to fetch submission data. Check the console for errors."
-                    );
+                window.open(`https://mail.google.com/mail/u/0/#drafts/${response.draftId}`, "_blank");
+                printGoogleDoc(response.letterDocId);
+                printGoogleDoc(response.envelopeDocId);
+                printGoogleDoc(response.invoiceDocId);
+
+                if (response.data.cremationType.includes("Retain my pet's remains")) {
+                    chrome.storage.local.set({
+                        isAutofilling: true,
+                    });
+                    await delay(500);
+                    window.open(`https://www.pawsetrack.vet/app/dashboard`, "_blank");
                 }
+            } else {
+                console.error("Failed to fetch JotForm data:", response.error);
+                alert("Failed to fetch submission data. Check the console for errors.");
             }
-        );
+        });
     });
 
     // Add an event listener to the close button to hide the modal
@@ -127,4 +128,8 @@ function printGoogleDoc(docId) {
 
 function printCurrentWindow() {
     window.print();
+}
+
+function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }

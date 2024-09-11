@@ -35,6 +35,11 @@
             "js": ["scripts/pawsetrack-content.js"],
             "matches": ["https://www.pawsetrack.vet/*"],
             "run_at": "document_end"
+        },
+        {
+            "js": ["scripts/calendar-content.js"],
+            "matches": ["https://calendar.google.com/calendar/*"],
+            "run_at": "document_end"
         }
     ],
     "oauth2": {
