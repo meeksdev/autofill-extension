@@ -96,7 +96,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 .then((response) => response.json())
                 .then(handleData)
                 .then(storeJotformData)
-
                 .then(createAndSendGmailDraft)
                 // Invoice
                 .then((data) => {
@@ -107,8 +106,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
                         // if did not request an itemized invoice then do not go through with the rest of the code
                         if (data.itemizedReceipt !== "Yes") {
-                            console.warn("No itemized Receipt");
-                            resolve(data);
+                            console.log("No itemized Receipt");
+                            return resolve(data);
                         }
 
                         let products = [];
@@ -186,7 +185,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         const subtotal = products.reduce((total, product) => total + (parseFloat(product.subtotal) || 0), 0);
                         const paid = 0;
                         const total = subtotal - paid;
-                        console.log(subtotal);
 
                         //format subtotals as currency
                         products.forEach((product) => {
@@ -236,22 +234,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                 DueAmt: formatAsCurrency(total),
                             },
                             function (newDocId) {
-                                // copiedLetterDocId = newDocId;
                                 console.log("%cNew document created with ID:", "color: green", newDocId);
-                                resolve({
-                                    data,
-                                    copiedInvoiceDocId: newDocId,
-                                });
+                                data.invoiceDocId = newDocId;
+                                resolve(data);
                             }
                         );
                     });
-                    // return data;
                 })
                 // Create Letter Google Doc
-                .then(({ data, copiedInvoiceDocId }) => {
+                .then((data) => {
                     return new Promise((resolve, reject) => {
                         console.log("creating letter");
-                        // let copiedLetterDocId;
                         createDocFromTemplate(
                             letterTemplateId,
                             `(Letter) ${data.nameOf}\'s Passing ${data.submissionDate}`,
@@ -263,23 +256,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                 pronoun2: data.pronoun2,
                             },
                             function (newDocId) {
-                                // copiedLetterDocId = newDocId;
                                 console.log("%cNew document created with ID:", "color: green", newDocId);
-                                resolve({
-                                    data,
-                                    copiedInvoiceDocId,
-                                    copiedLetterDocId: newDocId,
-                                });
+                                data.letterDocId = newDocId;
+                                resolve(data);
                             }
                         );
                     });
-                    // return data;
                 })
                 // Create Envelope Google Doc
-                .then(({ data, copiedInvoiceDocId, copiedLetterDocId }) => {
+                .then((data) => {
                     return new Promise((resolve, reject) => {
                         console.log("creating envelope");
-                        // let copiedEnvelopeDocId;
                         createDocFromTemplate(
                             envelopeTemplateId,
                             `(Envelope) ${data.nameOf}\'s Passing ${data.submissionDate}`,
@@ -290,29 +277,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                 AddressLine3: "",
                             },
                             function (newDocId) {
-                                // copiedEnvelopeDocId = newDocId;
                                 console.log("%cNew document created with ID:", "color: green", newDocId);
-                                resolve({
-                                    data,
-                                    copiedInvoiceDocId,
-                                    copiedLetterDocId,
-                                    copiedEnvelopeDocId: newDocId,
-                                });
+                                data.envelopeDocId = newDocId;
+                                resolve(data);
                             }
                         );
                     });
-                    // return data;
                 })
-                .then(({ data, copiedInvoiceDocId, copiedLetterDocId, copiedEnvelopeDocId }) => {
+                /* .then(({ data }) => {
+                    console.log("Too soon");
                     sendResponse({
                         success: true,
                         data: data,
-                        invoiceDocId: copiedInvoiceDocId,
-                        letterDocId: copiedLetterDocId,
-                        envelopeDocId: copiedEnvelopeDocId,
-                        // draftId: draftId,
                     });
-                })
+                }) */
                 .then((data) => {
                     console.log("All tasks completed successfully");
                     sendResponse({ success: true, data: data });
@@ -354,6 +332,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 function createAndSendGmailDraft(data) {
+    console.log("createAndSendGmailDraft");
     const formattedDate = new Date(data.dateOf6["datetime"]).toLocaleString();
 
     const emailBody = `
@@ -416,7 +395,7 @@ function extractFormData(data) {
 }
 
 function storeJotformData(data) {
-    // console.log("storeJotformData");
+    console.log("storeJotformData");
 
     const cremationType = data.cremationType.includes("PRIVATE cremation")
         ? "Private"
@@ -454,7 +433,7 @@ function storeJotformData(data) {
         ? "Mailed"
         : "Sarena";
 
-    // console.log(collectionLocation, collectionLocation);
+    console.log("Made it!");
 
     // should probably make address line 2 with city state and postal code.
     chrome.storage.local.set(
@@ -500,7 +479,7 @@ function storeJotformData(data) {
         },
         function () {
             // Notify that we saved the data
-            statusMessage.textContent = "Data saved successfully!";
+            // statusMessage.textContent = "Data saved successfully!";
         }
     );
 

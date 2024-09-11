@@ -98,11 +98,10 @@ function createFormButtonModal() {
                 modal.style.display = "none";
 
                 window.open(`https://mail.google.com/mail/u/0/#drafts/${response.draftId}`, "_blank");
-                printGoogleDoc(response.letterDocId);
-                printGoogleDoc(response.envelopeDocId);
-                printGoogleDoc(response.invoiceDocId);
-
-                if (response.data.cremationType.includes("Retain my pet's remains")) {
+                if (response.data.letterDocId) printGoogleDoc(response.data.letterDocId);
+                if (response.data.envelopeDocId) printGoogleDoc(response.data.envelopeDocId);
+                if (response.data.invoiceDocId) printGoogleDoc(response.data.invoiceDocId);
+                if (!response.data.cremationType.includes("Retain my pet's remains")) {
                     chrome.storage.local.set({
                         isAutofilling: true,
                     });
