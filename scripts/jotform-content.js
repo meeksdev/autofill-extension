@@ -47,15 +47,25 @@ function createFormButtonModal() {
     const step1Text = document.createElement("p");
     step1Text.innerHTML = "Gather the data from the form submission.";
 
-    // Create the gather button element
-    const gatherButton = document.createElement("button");
-    gatherButton.textContent = "Fetch JotForm Data";
-    gatherButton.style.backgroundColor = "#4285f4";
-    gatherButton.style.color = "#fff";
-    gatherButton.style.borderRadius = "5px";
-    gatherButton.style.cursor = "pointer";
-    gatherButton.style.padding = "10px 20px";
-    gatherButton.id = "AutofillModal-GatherButton";
+    // Create the docsAndEmailButton element
+    const docsAndEmailButton = document.createElement("button");
+    docsAndEmailButton.textContent = "Fill Docs and Email";
+    docsAndEmailButton.style.backgroundColor = "#4285f4";
+    docsAndEmailButton.style.color = "#fff";
+    docsAndEmailButton.style.borderRadius = "5px";
+    docsAndEmailButton.style.cursor = "pointer";
+    docsAndEmailButton.style.padding = "10px 20px";
+    docsAndEmailButton.id = "AutofillModal-GatherButton";
+
+    // Create the crematoryButton element
+    const crematoryButton = document.createElement("button");
+    crematoryButton.textContent = "Fill Crematory Forms";
+    crematoryButton.style.backgroundColor = "#4285f4";
+    crematoryButton.style.color = "#fff";
+    crematoryButton.style.borderRadius = "5px";
+    crematoryButton.style.cursor = "pointer";
+    crematoryButton.style.padding = "10px 20px";
+    crematoryButton.id = "AutofillModal-GatherButton";
 
     // Add a close button to the modal
     const closeButton = document.createElement("div");
@@ -73,17 +83,18 @@ function createFormButtonModal() {
 
     modal.appendChild(closeButton);
     modal.appendChild(step1Text);
-    modal.appendChild(gatherButton);
+    modal.appendChild(docsAndEmailButton);
+    modal.appendChild(crematoryButton);
     modal.appendChild(loadingText);
 
     // Append the button to the body of the webpage
     document.body.appendChild(modal);
 
     // Add an event listener to the button
-    gatherButton.addEventListener("click", () => {
-        gatherButton.style.backgroundColor = "#b8cff5";
-        gatherButton.style.cursor = "progress";
-        gatherButton.disabled = true;
+    docsAndEmailButton.addEventListener("click", () => {
+        docsAndEmailButton.style.backgroundColor = "#b8cff5";
+        docsAndEmailButton.style.cursor = "progress";
+        docsAndEmailButton.disabled = true;
         loadingText.style.display = "block";
 
         // Extract the form ID from the URL
@@ -92,25 +103,63 @@ function createFormButtonModal() {
         console.log("%cSubmission ID from URL:", "color: green", submissionId);
 
         // Send a message to the background script to fetch data from JotForm
-        chrome.runtime.sendMessage({ action: "getJotFormSubmissionData", submissionId: submissionId }, async function (response) {
+        chrome.runtime.sendMessage({ action: "fillDocsAndEmail", submissionId: submissionId }, async function (response) {
             if (response.success) {
                 console.log("%cForm Submission:", "color: green", response.data);
-                modal.style.display = "none";
+                // modal.style.display = "none";
+                docsAndEmailButton.textContent = "Completed.";
+                docsAndEmailButton.style.backgroundColor = "#fff";
+                docsAndEmailButton.style.color = "green";
+                docsAndEmailButton.style.cursor = "default";
+                loadingText.style.display = "none";
 
                 window.open(`https://mail.google.com/mail/u/0/#drafts/${response.draftId}`, "_blank");
                 if (response.data.letterDocId) printGoogleDoc(response.data.letterDocId);
                 if (response.data.envelopeDocId) printGoogleDoc(response.data.envelopeDocId);
                 if (response.data.invoiceDocId) printGoogleDoc(response.data.invoiceDocId);
-                if (!response.data.cremationType.includes("Retain my pet's remains")) {
+            } else {
+                console.error("Failed to Fill Docs and Email:", response.error);
+                alert("Failed to Fill Docs and Email. Check the console for errors.");
+            }
+        });
+    });
+
+    crematoryButton.addEventListener("click", () => {
+        crematoryButton.style.backgroundColor = "#b8cff5";
+        crematoryButton.style.cursor = "progress";
+        crematoryButton.disabled = true;
+        loadingText.style.display = "block";
+
+        // Extract the form ID from the URL
+        const urlPath = window.location.pathname;
+        const submissionId = urlPath.split("/").pop(); // Gets the last part of the URL path
+        console.log("%cSubmission ID from URL:", "color: green", submissionId);
+
+        // Send a message to the background script to fetch data from JotForm
+        chrome.runtime.sendMessage({ action: "fillCrematoryForms", submissionId: submissionId }, async function (response) {
+            if (response.success) {
+                console.log("%cForm Submission:", "color: green", response.data);
+                // modal.style.display = "none";
+                loadingText.style.display = "none";
+                crematoryButton.style.backgroundColor = "#fff";
+
+                console.log(response.data.cremationType);
+                if (response.data.cremationType !== "Retain") {
+                    crematoryButton.textContent = "Completed.";
+                    crematoryButton.style.color = "green";
                     chrome.storage.local.set({
                         isAutofilling: true,
                     });
-                    await delay(500);
                     window.open(`https://www.pawsetrack.vet/app/dashboard`, "_blank");
+                } else {
+                    console.log("Client Will Retain Remains");
+                    crematoryButton.textContent = "Client Will Retain Remains.";
+                    crematoryButton.style.color = "black";
+                    crematoryButton.style.cursor = "default";
                 }
             } else {
-                console.error("Failed to fetch JotForm data:", response.error);
-                alert("Failed to fetch submission data. Check the console for errors.");
+                console.error("Failed to Fill Crematory Site:", response.error);
+                alert("Failed to Fill Crematory Site. Check the console for errors.");
             }
         });
     });

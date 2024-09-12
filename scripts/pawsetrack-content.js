@@ -21,6 +21,7 @@ const petAndOwnerKeys = [
 const bundlesKeys = ["pawOrNosePrint"];
 const urnKeys = ["urnChoice", "isUrnEngraved", "urnLine1", "urnLine2", "urnLine3", "urnLine4"];
 const memorialKeys = [
+    "pawOrNosePrint",
     "clayNosePrint",
     "clayPawPrint",
     "additionalBoxedFurClipping",
@@ -28,7 +29,7 @@ const memorialKeys = [
     "additionalNosePrint",
     "additionalPawPrint",
 ];
-const reviewKeys = ["collectionLocation"];
+const reviewKeys = ["collectionLocation", "petHospital"];
 
 chrome.runtime.onMessage.addListener((message, sender, response) => {
     const { type, action } = message;
@@ -199,22 +200,14 @@ for (let i = 0; i < form.elements.length; i++) {
 /*** BUNDLED PRODUCTS PAGE ***/
 async function fillBundlesForm(storage) {
     if (storage.pawOrNosePrint === "Nose print") {
-        const editButton = await waitForCondition(() =>
-            [...document.querySelectorAll("button")].find((button) => button.textContent.includes("Edit"))
+        const removeButton = await waitForCondition(() =>
+            [...document.querySelectorAll("button")].find((button) => button.textContent.includes("Remove"))
         );
-        console.log(editButton);
-        editButton.click();
-
-        const specialInstructionsInput = await waitForCondition(() => document.getElementById("specialInstructions"));
-        console.log(specialInstructionsInput);
-        specialInstructionsInput.value = "INK NOSE PRINT";
-        specialInstructionsInput.dispatchEvent(inputEvent);
-
-        const updateButton = await waitForCondition(() =>
-            [...document.querySelectorAll("span")].find((span) => span.textContent.includes("Update"))?.closest("button")
-        );
-        console.log(updateButton);
-        updateButton.click();
+        console.log(removeButton);
+        removeButton.click();
+    } else if (storage.pawOrNosePrint === "Paw print") {
+        // Do nothing
+    } else if (storage.pawOrNosePrint === "No thank you") {
     }
 
     //go to the next page
@@ -309,6 +302,11 @@ async function handleUrnText(storage, urnWindow) {
 
 /*** MEMORIAL PRODUCTS PAGE ***/
 async function fillMemorialForm(storage) {
+    // BUNDLED PRODUCTS NOSE PRINT
+    if (storage.pawOrNosePrint === "Nose print") {
+        storage.additionalNosePrint = storage.additionalNosePrint ? storage.additionalNosePrint++ : 1;
+    }
+
     // CLAY PAW PRINT
     for (let i = 0; i < storage.clayPawPrint; i++) {
         console.log("Add Clay Paw Print");
@@ -449,8 +447,15 @@ async function fillReviewForm(storage) {
     console.log("fillReviewForm");
     console.log(storage.collectionLocation);
 
+    let extraElements = [];
     if (storage.collectionLocation === "Office") {
         // Do Nothing
+        const unorderedList = document.createElement("ul");
+        const listElement = document.createElement("li");
+        listElement.textContent = `Add Collection Location: ${storage.petHospital}`;
+
+        unorderedList.appendChild(listElement);
+        extraElements.push(unorderedList);
     } else if (storage.collectionLocation === "Pick-up") {
         const deliveryButton = await waitForCondition(() =>
             [...document.querySelectorAll("button")].find((button) => button.textContent.includes("Pickup From Care Center"))
@@ -458,15 +463,25 @@ async function fillReviewForm(storage) {
         console.log(deliveryButton);
         deliveryButton.click();
     } else if (storage.collectionLocation === "Mailed") {
-        // What to do here?
+        // Click Other and enter "Mail ashes to Owner's home address"
+        const deliveryButton = await waitForCondition(() =>
+            [...document.querySelectorAll("button")].find((button) => button.textContent.includes("Other"))
+        );
+        console.log(deliveryButton);
+        deliveryButton.click();
+
+        const specialInstructionsField = await waitForCondition(() => document.getElementById("specialInstructions"));
+        specialInstructionsField.value = "Mail ashes to Owner's home address";
     } else if (storage.collectionLocation === "Sarena") {
         // Do Nothing
     }
 
-    createModalWindow();
+    console.log(extraElements);
+    if (extraElements.length > 0) createModalWindow(extraElements);
+    else createModalWindow();
 }
 
-function createModalWindow() {
+function createModalWindow(extraElements = null) {
     // Create modal/popup element
     const modal = document.createElement("div");
     modal.id = "AutofillModal";
@@ -501,6 +516,13 @@ function createModalWindow() {
     modal.appendChild(closeButton);
     modal.appendChild(notificationText);
     document.body.appendChild(modal);
+
+    console.log(extraElements);
+    if (extraElements) {
+        extraElements.forEach((element) => {
+            modal.appendChild(element);
+        });
+    }
 
     // Add an event listener to the close button to hide the modal
     closeButton.addEventListener("click", () => {
