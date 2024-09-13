@@ -2,103 +2,117 @@ const fs = require('fs');
 const path = require('path');
 const Terser = require('terser');
 
-const inputDir = 'src'; // Directory where your original files are located
+const inputDir = './'; // Directory where your original files are located
 const outputDir = 'dist'; // Directory where minified files will be saved
 
-// List of files to exclude from minification
+// List of files and directories to exclude
 const excludeFiles = [
-    'terser.config.js',
+    '.prettierrc',
     'package.json',
+    'package-lock.json',
     'README.md',
     'LICENSE.txt',
-    'babel.config.js',
-    'jest.config.js',
-    'webpack.config.js',
-    'postcss.config.js',
-    'vite.config.js',
-    '.eslintrc.js',
-    '.prettierrc.js',
-    '.browserslistrc',
-    '.env',
-    '.env.development',
-    '.env.production',
-    '.env.test',
-    '.env.local',
-    '.env.development.local',
-    '.env.production.local',
-    '.env.test.local',
-    '.env.shared',
-    '.env.development.shared',
-    '.env.production.shared',
-    '.env.test.shared',
-    '.env.development.cjs',
-    '.env.production.cjs',
-    '.env.test.cjs',
-    '.env.cjs',
-    '.env.development.',
+    'terser.config.js',
+    // Add other excluded files here
 ];
 
-// Function to minify individual JavaScript files
-function minifyFile(filePath) {
+const excludeDirs = ['node_modules', 'dist', '.git']; // List of directories to exclude
+
+// Function to check if a file should be excluded
+function isExcludedFile(filePath) {
     const fileName = path.basename(filePath);
+    return excludeFiles.includes(fileName);
+}
 
-    // Skip files listed in excludeFiles
-    if (excludeFiles.includes(fileName)) {
-        console.log(`Skipping ${filePath}`);
-        return;
-    }
+// Function to check if a directory should be excluded
+function isExcludedDir(dirPath) {
+    const dirName = path.basename(dirPath);
+    return excludeDirs.includes(dirName);
+}
 
-    const outputFilePath = path.join(
-        outputDir,
-        path.relative(inputDir, filePath)
-    );
-
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error(`Error reading file ${filePath}:`, err);
-            return;
-        }
-
-        Terser.minify(data).then(result => {
-            if (result.error) {
-                console.error(
-                    `Error minifying file ${filePath}:`,
-                    result.error
+// Function to create the corresponding directory in the output directory
+function ensureOutputDir(filePath) {
+    const relativePath = path.relative(inputDir, filePath); // Get the relative path from inputDir
+    const outputPath = path.join(outputDir, path.dirname(relativePath)); // Append the relative path to outputDir
+    return new Promise((resolve, reject) => {
+        fs.mkdir(outputPath, { recursive: true }, err => {
+            if (err) {
+                return reject(
+                    new Error(`Error creating directory ${outputPath}: ${err}`)
                 );
-                return;
             }
-
-            // Ensure the output directory exists
-            fs.mkdir(path.dirname(outputFilePath), { recursive: true }, err => {
-                if (err) {
-                    console.error(
-                        `Error creating directory ${path.dirname(
-                            outputFilePath
-                        )}:`,
-                        err
-                    );
-                    return;
-                }
-
-                fs.writeFile(outputFilePath, result.code, 'utf8', err => {
-                    if (err) {
-                        console.error(
-                            `Error writing file ${outputFilePath}:`,
-                            err
-                        );
-                    } else {
-                        console.log(
-                            `Minified ${filePath} to ${outputFilePath}`
-                        );
-                    }
-                });
-            });
+            resolve(outputPath);
         });
     });
 }
 
-// Function to recursively minify files in a directory
-function minifyDirectory(dir) {
+// Function to minify and move .js files
+function minifyFile(filePath) {
+    const fileName = path.basename(filePath);
+
+    ensureOutputDir(filePath)
+        .then(outputPath => {
+            const outputFilePath = path.join(outputPath, fileName);
+
+            fs.readFile(filePath, 'utf8', (err, data) => {
+                if (err) {
+                    console.error(`Error reading file ${filePath}:`, err);
+                    return;
+                }
+
+                Terser.minify(data).then(result => {
+                    if (result.error) {
+                        console.error(
+                            `Error minifying file ${filePath}:`,
+                            result.error
+                        );
+                        return;
+                    }
+
+                    fs.writeFile(outputFilePath, result.code, 'utf8', err => {
+                        if (err) {
+                            console.error(
+                                `Error writing file ${outputFilePath}:`,
+                                err
+                            );
+                        } else {
+                            console.log(
+                                `Minified and moved ${filePath} to ${outputFilePath}`
+                            );
+                        }
+                    });
+                });
+            });
+        })
+        .catch(error => console.error(error.message));
+}
+
+// Function to copy non-.js files
+function copyFile(filePath) {
+    const fileName = path.basename(filePath);
+
+    ensureOutputDir(filePath)
+        .then(outputPath => {
+            const outputFilePath = path.join(outputPath, fileName);
+
+            fs.copyFile(filePath, outputFilePath, err => {
+                if (err) {
+                    console.error(`Error copying file ${filePath}:`, err);
+                } else {
+                    console.log(`Copied ${filePath} to ${outputFilePath}`);
+                }
+            });
+        })
+        .catch(error => console.error(error.message));
+}
+
+// Function to process the directory, minifying .js files and copying others
+function processDirectory(dir) {
+    if (isExcludedDir(dir)) {
+        console.log(`Skipping excluded directory: ${dir}`);
+        return;
+    }
+
     fs.readdir(dir, (err, files) => {
         if (err) {
             console.error(`Error reading directory ${dir}:`, err);
@@ -116,15 +130,23 @@ function minifyDirectory(dir) {
                     return;
                 }
 
-                if (stats.isFile() && filePath.endsWith('.js')) {
-                    minifyFile(filePath);
+                if (isExcludedFile(filePath)) {
+                    console.log(`Skipping excluded file: ${filePath}`);
+                    return;
+                }
+
+                if (stats.isFile()) {
+                    if (filePath.endsWith('.js')) {
+                        minifyFile(filePath); // Minify and move .js files
+                    } else {
+                        copyFile(filePath); // Copy non-.js files
+                    }
                 } else if (stats.isDirectory()) {
-                    minifyDirectory(filePath);
+                    processDirectory(filePath); // Recursively process subdirectories
                 }
             });
         });
     });
 }
 
-// Start minification process
-minifyDirectory(inputDir);
+processDirectory(inputDir);

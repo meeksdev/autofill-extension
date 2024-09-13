@@ -1,0 +1,14 @@
+body {
+    width: 400px;
+}
+
+.input-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#saveButton {
+    margin: 10px 0 0 auto;
+    display: block;
+}
