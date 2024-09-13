@@ -28,6 +28,7 @@ const memorialKeys = [
     "additionalFurClipping",
     "additionalNosePrint",
     "additionalPawPrint",
+    "cremationType"
 ];
 const reviewKeys = ["collectionLocation", "petHospital"];
 
@@ -199,6 +200,8 @@ for (let i = 0; i < form.elements.length; i++) {
 
 /*** BUNDLED PRODUCTS PAGE ***/
 async function fillBundlesForm(storage) {
+    console.log(storage.pawOrNosePrint);
+
     if (storage.pawOrNosePrint === "Nose print") {
         const removeButton = await waitForCondition(() =>
             [...document.querySelectorAll("button")].find((button) => button.textContent.includes("Remove"))
@@ -206,8 +209,16 @@ async function fillBundlesForm(storage) {
         console.log(removeButton);
         removeButton.click();
     } else if (storage.pawOrNosePrint === "Paw print") {
-        // Do nothing
+        // Here we simply have to wait to see that the product is actually being added. If we skip this, we start to see bugs.
+        await waitForCondition(() =>
+            [...document.querySelectorAll("button")].find((button) => button.textContent.includes("Remove"))
+        );
     } else if (storage.pawOrNosePrint === "No thank you") {
+        const removeButton = await waitForCondition(() =>
+            [...document.querySelectorAll("button")].find((button) => button.textContent.includes("Remove"))
+        );
+        console.log(removeButton);
+        removeButton.click();
     }
 
     //go to the next page
@@ -302,10 +313,19 @@ async function handleUrnText(storage, urnWindow) {
 
 /*** MEMORIAL PRODUCTS PAGE ***/
 async function fillMemorialForm(storage) {
+    // COMMUNAL CREMATION FIX
+    /* if (storage.cremationType === "Memorial" && storage.pawOrNosePrint === "Paw print") {
+        storage.additionalPawPrint = storage.additionalPawPrint ? storage.additionalPawPrint++ : 1;
+    }
+    console.log("cremationType:", storage.cremationType);
+    console.log("pawOrNosePrint:", storage.pawOrNosePrint);
+    console.log("additionalPawPrint:", storage.additionalPawPrint); */
+
     // BUNDLED PRODUCTS NOSE PRINT
     if (storage.pawOrNosePrint === "Nose print") {
         storage.additionalNosePrint = storage.additionalNosePrint ? storage.additionalNosePrint++ : 1;
     }
+    
 
     // CLAY PAW PRINT
     for (let i = 0; i < storage.clayPawPrint; i++) {
