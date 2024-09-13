@@ -125,22 +125,22 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
     saveButton.addEventListener("click", function () {
-        const jotformToken = jotformTokenInput.value;
-        const jotformFormId = jotformFormIdInput.value;
-        const letterTemplateId = letterTemplateIdInput.value;
-        const envelopeTemplateId = envelopeTemplateIdInput.value;
-        const invoiceTemplateId = invoiceTemplateIdInput.value;
-        const euthanasiaPrice = euthanasiaPriceInput.value;
-        const smallPrivateCremationPrice = smallPrivateCremationPriceInput.value;
-        const largePrivateCremationPrice = largePrivateCremationPriceInput.value;
-        const smallMemorialCremationPrice = smallMemorialCremationPriceInput.value;
-        const largeMemorialCremationPrice = largeMemorialCremationPriceInput.value;
-        const furPrice = furPriceInput.value;
-        const furAndBoxPrice = furAndBoxPriceInput.value;
-        const clayPawPrice = clayPawPriceInput.value;
-        const clayNosePrice = clayNosePriceInput.value;
-        const pawPrintPrice = pawPrintPriceInput.value;
-        const nosePrintPrice = nosePrintPriceInput.value;
+        const jotformToken = jotformTokenInput.value.trim();
+        const jotformFormId = jotformFormIdInput.value.trim();
+        const letterTemplateId = letterTemplateIdInput.value.trim();
+        const envelopeTemplateId = envelopeTemplateIdInput.value.trim();
+        const invoiceTemplateId = invoiceTemplateIdInput.value.trim();
+        const euthanasiaPrice = euthanasiaPriceInput.value.trim();
+        const smallPrivateCremationPrice = smallPrivateCremationPriceInput.value.trim();
+        const largePrivateCremationPrice = largePrivateCremationPriceInput.value.trim();
+        const smallMemorialCremationPrice = smallMemorialCremationPriceInput.value.trim();
+        const largeMemorialCremationPrice = largeMemorialCremationPriceInput.value.trim();
+        const furPrice = furPriceInput.value.trim();
+        const furAndBoxPrice = furAndBoxPriceInput.value.trim();
+        const clayPawPrice = clayPawPriceInput.value.trim();
+        const clayNosePrice = clayNosePriceInput.value.trim();
+        const pawPrintPrice = pawPrintPriceInput.value.trim();
+        const nosePrintPrice = nosePrintPriceInput.value.trim();
 
         chrome.storage.local.set(
             {

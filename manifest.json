@@ -1,14 +1,12 @@
 {
     "manifest_version": 3,
     "name": "Sarena Autofill",
-    "description": "Gather from Jotform and fill gmail draft and google docs.",
-    "version": "0.1",
+    "description": "Tool for Veterinarians that automates multiple common processes.",
+    "version": "1.0",
     "permissions": [
-        "activeTab",
         "tabs",
         "identity",
         "storage",
-        "scripting",
         "https://www.googleapis.com/*",
         "https://api.jotform.com/*",
         "https://www.googleapis.com/auth/gmail.compose",
