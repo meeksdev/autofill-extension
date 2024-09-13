@@ -106,7 +106,6 @@ function createFormButtonModal() {
         chrome.runtime.sendMessage({ action: "fillDocsAndEmail", submissionId: submissionId }, async function (response) {
             if (response.success) {
                 console.log("%cForm Submission:", "color: green", response.data);
-                // modal.style.display = "none";
                 docsAndEmailButton.textContent = "Completed.";
                 docsAndEmailButton.style.backgroundColor = "#fff";
                 docsAndEmailButton.style.color = "green";
@@ -116,10 +115,16 @@ function createFormButtonModal() {
                 window.open(`https://mail.google.com/mail/u/0/#drafts/${response.draftId}`, "_blank");
                 if (response.data.letterDocId) printGoogleDoc(response.data.letterDocId);
                 if (response.data.envelopeDocId) printGoogleDoc(response.data.envelopeDocId);
-                if (response.data.invoiceDocId) printGoogleDoc(response.data.invoiceDocId);
+                // if (response.data.invoiceDocId) printGoogleDoc(response.data.invoiceDocId);
+                window.open(`https://docs.google.com/document/d/${response.data.invoiceDocId}/edit`, "_blank");
             } else {
                 console.error("Failed to Fill Docs and Email:", response.error);
-                alert("Failed to Fill Docs and Email. Check the console for errors.");
+                // alert(`Failed to Fill Crematory Site. ${response.error}`);
+                docsAndEmailButton.textContent = `Failed: ${response.error}`;
+                docsAndEmailButton.style.backgroundColor = "#fff";
+                docsAndEmailButton.style.color = "red";
+                docsAndEmailButton.style.cursor = "default";
+                loadingText.style.display = "none";
             }
         });
     });
@@ -159,7 +164,12 @@ function createFormButtonModal() {
                 }
             } else {
                 console.error("Failed to Fill Crematory Site:", response.error);
-                alert("Failed to Fill Crematory Site. Check the console for errors.");
+                // alert(`Failed to Fill Crematory Site. ${response.error}`);
+                crematoryButton.textContent = `Failed: ${response.error}`;
+                crematoryButton.style.backgroundColor = "#fff";
+                crematoryButton.style.color = "red";
+                crematoryButton.style.cursor = "default";
+                loadingText.style.display = "none";
             }
         });
     });

@@ -66,13 +66,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         chrome.storage.local.get(["jotformToken"], function (result) {
             const jotformToken = result.jotformToken;
+            if(!jotformToken) {
+                sendResponse({ success: false, error: "Could not obtain Jotform API key. Check settings." });
+            }
             console.log("%cRetrieved JotForm token: ", "color: green", jotformToken);
 
             fetch(`https://api.jotform.com/submission/${submissionId}?apiKey=${jotformToken}`)
                 .then((response) => response.json())
                 .then(handleData)
                 .then(storeJotformData)
-                .then(createAndSendGmailDraft)
+                .then(createGmailDraft)
                 .then(createInvoice)
                 .then(createLetter)
                 .then(createEnvelope)
@@ -97,10 +100,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 .then((response) => response.json())
                 .then(handleData)
                 .then(storeJotformData)
-                // .then(createAndSendGmailDraft)
-                // .then(createInvoice)
-                // .then(createLetter)
-                // .then(createEnvelope)
                 .then((data) => {
                     console.log("All tasks completed successfully with data:", data);
                     sendResponse({ success: true, data: data });
@@ -126,22 +125,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
     } else if (message.action === "deleteDoc") {
         deleteDocument(message.docId);
-    } /* else if (message.action === "openAndFillCrematoryForm") {
-        const url = `https://pawsetrack/app/dashboard`;
-        chrome.tabs.create({ url }, function (tab) {
-            chrome.tabs.onUpdated.addListener(function onTabUpdated(tabId, info) {
-                if (tabId === tab.id && info.status === "complete") {
-                    chrome.tabs.sendMessage(tabId, {
-                        action: "fillCrematoryForm",
-                    });
-                    chrome.tabs.onUpdated.removeListener(onTabUpdated);
-                }
-            });
-        });
-    } */
+    }
 });
 
-function createAndSendGmailDraft(data) {
+function createGmailDraft(data) {
     console.log("Creating and sending Gmail draft with data:", data);
     const formattedDate = new Date(data.dateOf6["datetime"]).toLocaleString();
 
@@ -392,26 +379,21 @@ async function storeJotformData(data) {
 }
 
 function createInvoice(data) {
-    const myData = data;
     return new Promise((resolve, reject) => {
-        console.log("Step 3: Create Invoice");
-        console.log("creating invoice", myData);
-        console.log("Nose Print Price:", myData.nosePrintPrice);
-        console.log(Object.keys(myData));
-        console.log(data.invoiceTemplateId);
-        if (myData.invoiceTemplateId) {
-            console.log("Invoice Template ID:", myData.invoiceTemplateId);
-        } else {
-            console.log("Invoice Template ID is missing or empty");
-        }
-
-        const currentDate = new Date().toLocaleDateString("en-US");
+        console.log("Create Invoice");
 
         // if did not request an itemized invoice then do not go through with the rest of the code
         if (data.itemizedReceipt !== "Yes") {
             console.log("No itemized Receipt");
             return resolve(data);
         }
+
+        if (!data.invoiceTemplateId) {
+            console.log("Invoice Template ID is missing or empty");
+            return reject(new Error("Could not obtain Invoice Template ID. Check settings."));
+        }
+
+        const currentDate = new Date().toLocaleDateString("en-US");
 
         let products = [];
         // Euthanasia
@@ -502,8 +484,6 @@ function createInvoice(data) {
             products.push({ name: "", subtotal: "" });
         }
 
-        console.log("invoiceTemplateId:", data.invoiceTemplateId);
-
         createDocFromTemplate(
             data.invoiceTemplateId,
             `(Invoice) ${data.nameOf}\'s Passing ${data.submissionDate}`,
@@ -540,13 +520,19 @@ function createInvoice(data) {
                 SubtotalAmt: formatAsCurrency(subtotal),
                 PaidAmt: formatAsCurrency(paid),
                 DueAmt: formatAsCurrency(total),
-            },
-            function (newDocId) {
-                console.log("%cNew document created with ID:", "color: green", newDocId);
-                data.invoiceDocId = newDocId;
-                resolve(data);
             }
-        );
+        )
+        .then((newDocId) => {
+            // If the document creation is successful, log and resolve
+            console.log("%cNew invoice document created with ID:", "color: green", newDocId);
+            data.invoiceDocId = newDocId; // Save the new document ID in `data`
+            resolve(data); // Resolve with the updated `data` object
+        })
+        .catch((error) => {
+            // If there is any error, log and reject
+            console.error("Error in createInvoice:", error);
+            reject(error); // Reject the promise with the error
+        });
     });
 }
 
@@ -554,7 +540,7 @@ function formatAsCurrency(value) {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 }
 
-function createDocFromTemplate(templateDocId, title, replacements, callback) {
+/* function createDocFromTemplate(templateDocId, title, replacements, callback) {
     copyTemplate(templateDocId, title, function (newDocId) {
         replaceTextInDocument(newDocId, replacements, function (response) {
             callback(newDocId); // Return the new document's ID
@@ -640,12 +626,149 @@ function replaceTextInDocument(docId, replacements, callback) {
             callback(response);
         });
     });
+} */
+
+function createDocFromTemplate(templateDocId, title, replacements) {
+    return new Promise((resolve, reject) => {
+        console.log("Starting to copy template...");
+
+        copyTemplate(templateDocId, title, function (error, newDocId) {
+            if (error) {
+                console.error("Error copying template:", error.message);
+                return reject(new Error("Error copying template: " + error.message));
+            }
+
+            console.log("Template copied successfully. New Doc ID:", newDocId);
+            console.log("Starting text replacement...");
+
+            replaceTextInDocument(newDocId, replacements, function (error, response) {
+                if (error) {
+                    console.error("Error replacing text:", error.message);
+                    return reject(new Error("Error replacing text: " + error.message));
+                }
+
+                console.log("Text replaced successfully in document:", newDocId);
+                resolve(newDocId); // Resolve the promise with the new document's ID
+            });
+        });
+    });
+}
+    
+    
+
+function copyTemplate(templateDocId, title, callback) {
+    console.log("Copying template with ID:", templateDocId, "and Title:", title);
+
+    authenticateGoogle(function (token) {
+        const url = `https://www.googleapis.com/drive/v3/files/${templateDocId}/copy`;
+        const data = { name: title };
+
+        makeApiCall(url, "POST", data, token, function (error, response) {
+            if (error) {
+                console.error("Error during template copy:", error.message);
+                return callback(error); // Pass the error to the callback
+            }
+
+            console.log("Template copy succeeded. Response:", response);
+            callback(null, response.id); // Return the new document ID
+        });
+    });
 }
 
-function createLetter(data) {
-    console.log("Creating letter document with data:", data);
-    return new Promise((resolve, reject) => {
-        createDocFromTemplate(
+
+function replaceTextInDocument(docId, replacements, callback) {
+    console.log("Replacing text in document with ID:", docId);
+
+    authenticateGoogle(function (token) {
+        const url = `https://docs.googleapis.com/v1/documents/${docId}:batchUpdate`;
+
+        const requests = Object.keys(replacements).map((key) => ({
+            replaceAllText: {
+                containsText: {
+                    text: `{{${key}}}`,
+                    matchCase: true,
+                },
+                replaceText: replacements[key],
+            },
+        }));
+
+        const data = { requests: requests };
+
+        makeApiCall(url, "POST", data, token, function (error, response) {
+            if (error) {
+                console.error("Error during text replacement:", error.message);
+                return callback(error); // Pass the error to the callback
+            }
+
+            console.log("Text replacement succeeded. Response:", response);
+            callback(null, response);
+        });
+    });
+}
+
+
+function authenticateGoogle(callback) {
+    console.log("Starting Google authentication...");
+
+    chrome.identity.getAuthToken({ interactive: true }, function (token) {
+        if (chrome.runtime.lastError || !token) {
+            console.error("Authentication failed:", chrome.runtime.lastError);
+            return callback(new Error("Authentication failed."));
+        }
+
+        console.log("Authentication successful. Token received:", token);
+        callback(token);
+    });
+}
+
+
+function makeApiCall(url, method, data, token, callback) {
+    console.log("Making API call to:", url, "with data:", data);
+
+    fetch(url, {
+        method: method,
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+        },
+        body: data ? JSON.stringify(data) : null,
+    })
+    .then((response) => {
+        if (!response.ok) {
+            return response.json().then((errData) => {
+                console.error("API call failed:", errData);
+                throw new Error(`API call failed with status ${response.status}: ${errData.error.message}`);
+            });
+        }
+        return response.json();
+    })
+    .then((data) => {
+        console.log("API call succeeded with data:", data);
+        callback(null, data);
+    })
+    .catch((error) => {
+        console.error("API call error:", error.message);
+        callback(error);
+    });
+}
+
+    
+
+async function createLetter(data) {
+    console.log("Starting createLetter function");
+
+    // Check for missing Letter Template ID
+    if (!data.letterTemplateId) {
+        console.error("Letter Template ID is missing or empty");
+        throw new Error("Could not obtain Letter Template ID. Check settings.");
+    }
+
+    console.log("Letter Template ID:", data.letterTemplateId);
+
+    try {
+        console.log("Calling createDocFromTemplate...");
+        
+        const newDocId = await createDocFromTemplate(
             data.letterTemplateId,
             `(Letter) ${data.nameOf}'s Passing ${data.submissionDate}`,
             {
@@ -654,19 +777,32 @@ function createLetter(data) {
                 species: data.cuteSpecies,
                 pronoun1: data.pronoun1,
                 pronoun2: data.pronoun2,
-            },
-            function (newDocId) {
-                console.log("%cNew letter document created with ID:", "color: green", newDocId);
-                data.letterDocId = newDocId;
-                resolve(data);
             }
         );
-    });
+
+        console.log("createDocFromTemplate succeeded, new document ID:", newDocId);
+        
+        data.letterDocId = newDocId;
+        console.log("Letter document ID saved in data:", data.letterDocId);
+
+        return data; // Successfully return updated data
+
+    } catch (error) {
+        console.error("Error in createLetter:", error);
+        throw error; // Propagate the error
+    }
 }
 
+
+
 function createEnvelope(data) {
-    console.log("Creating envelope document with data:", data);
     return new Promise((resolve, reject) => {
+        console.log("Create Envelope");
+        if (!data.envelopeTemplateId) {
+            console.log("Envelope Template ID is missing or empty");
+            return reject(new Error("Could not obtain Envelope Template ID. Check settings."));
+        }
+
         createDocFromTemplate(
             data.envelopeTemplateId,
             `(Envelope) ${data.nameOf}'s Passing ${data.submissionDate}`,
@@ -675,12 +811,18 @@ function createEnvelope(data) {
                 AddressLine1: data.address["addr_line1"],
                 AddressLine2: data.cityStatePostal,
                 AddressLine3: "",
-            },
-            function (newDocId) {
-                console.log("%cNew envelope document created with ID:", "color: green", newDocId);
-                data.envelopeDocId = newDocId;
-                resolve(data);
             }
-        );
+        )
+        .then((newDocId) => {
+            // If the document creation is successful, log and resolve
+            console.log("%cNew envelope document created with ID:", "color: green", newDocId);
+            data.envelopeDocId = newDocId; // Save the new document ID in `data`
+            resolve(data); // Resolve with the updated `data` object
+        })
+        .catch((error) => {
+            // If there is any error, log and reject
+            console.error("Error in createEnvelope:", error);
+            reject(error); // Reject the promise with the error
+        });
     });
 }
