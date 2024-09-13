@@ -35,20 +35,23 @@ const excludeFiles = [
     '.env.production.cjs',
     '.env.test.cjs',
     '.env.cjs',
-    '.env.development.'
-]; 
+    '.env.development.',
+];
 
 // Function to minify individual JavaScript files
 function minifyFile(filePath) {
     const fileName = path.basename(filePath);
-    
+
     // Skip files listed in excludeFiles
     if (excludeFiles.includes(fileName)) {
         console.log(`Skipping ${filePath}`);
         return;
     }
 
-    const outputFilePath = path.join(outputDir, path.relative(inputDir, filePath));
+    const outputFilePath = path.join(
+        outputDir,
+        path.relative(inputDir, filePath)
+    );
 
     fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) {
@@ -56,24 +59,37 @@ function minifyFile(filePath) {
             return;
         }
 
-        Terser.minify(data).then((result) => {
+        Terser.minify(data).then(result => {
             if (result.error) {
-                console.error(`Error minifying file ${filePath}:`, result.error);
+                console.error(
+                    `Error minifying file ${filePath}:`,
+                    result.error
+                );
                 return;
             }
 
             // Ensure the output directory exists
-            fs.mkdir(path.dirname(outputFilePath), { recursive: true }, (err) => {
+            fs.mkdir(path.dirname(outputFilePath), { recursive: true }, err => {
                 if (err) {
-                    console.error(`Error creating directory ${path.dirname(outputFilePath)}:`, err);
+                    console.error(
+                        `Error creating directory ${path.dirname(
+                            outputFilePath
+                        )}:`,
+                        err
+                    );
                     return;
                 }
 
-                fs.writeFile(outputFilePath, result.code, 'utf8', (err) => {
+                fs.writeFile(outputFilePath, result.code, 'utf8', err => {
                     if (err) {
-                        console.error(`Error writing file ${outputFilePath}:`, err);
+                        console.error(
+                            `Error writing file ${outputFilePath}:`,
+                            err
+                        );
                     } else {
-                        console.log(`Minified ${filePath} to ${outputFilePath}`);
+                        console.log(
+                            `Minified ${filePath} to ${outputFilePath}`
+                        );
                     }
                 });
             });
@@ -93,7 +109,10 @@ function minifyDirectory(dir) {
             const filePath = path.join(dir, file);
             fs.stat(filePath, (err, stats) => {
                 if (err) {
-                    console.error(`Error getting stats for file ${filePath}:`, err);
+                    console.error(
+                        `Error getting stats for file ${filePath}:`,
+                        err
+                    );
                     return;
                 }
 
