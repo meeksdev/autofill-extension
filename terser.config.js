@@ -149,4 +149,12 @@ function processDirectory(dir) {
     });
 }
 
+// Recursively delete the folder and its contents
+fs.rm(outputDir, { recursive: true, force: true }, err => {
+    if (err) {
+        console.error(`Error deleting folder: ${err.message}`);
+    } else {
+        console.log(`Folder '${outputDir}' deleted successfully.`);
+    }
+});
 processDirectory(inputDir);

@@ -2,47 +2,27 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     // Check if the page is fully loaded
     chrome.storage.local.get(['jotformFormId'], function (result) {
         const jotformFormId = result.jotformFormId;
-        console.log(
-            '%cRetrieved JotForm form ID: ',
-            'color: green;',
-            jotformFormId
-        );
+        console.log('%cRetrieved JotForm form ID: ', 'color: green;', jotformFormId);
 
         // Jotform
-        if (
-            changeInfo.status === 'complete' &&
-            tab.url &&
-            tab.url.includes(`jotform.com/inbox/${jotformFormId}`)
-        ) {
+        if (changeInfo.status === 'complete' && tab.url && tab.url.includes(`jotform.com/inbox/${jotformFormId}`)) {
             chrome.tabs.sendMessage(tabId, {
                 action: 'createFormButton',
                 type: 'NEW',
             });
         }
         // Crematory
-        else if (
-            changeInfo.status === 'complete' &&
-            tab.url &&
-            tab.url.includes(`pawsetrack.vet/app/dashboard`)
-        ) {
+        else if (changeInfo.status === 'complete' && tab.url && tab.url.includes(`pawsetrack.vet/app/dashboard`)) {
             chrome.tabs.sendMessage(tabId, {
                 action: 'startNewOrder',
                 type: 'NEW',
             });
-        } else if (
-            changeInfo.status === 'complete' &&
-            tab.url &&
-            tab.url.includes(`pawsetrack.vet/app/orders/start`)
-        ) {
+        } else if (changeInfo.status === 'complete' && tab.url && tab.url.includes(`pawsetrack.vet/app/orders/start`)) {
             chrome.tabs.sendMessage(tabId, {
                 action: 'selectCremationType',
                 type: 'NEW',
             });
-        } else if (
-            changeInfo.status === 'complete' &&
-            tab.url &&
-            tab.url.includes(`pawsetrack.vet/app/orders/add`)
-        ) {
+        } else if (changeInfo.status === 'complete' && tab.url && tab.url.includes(`pawsetrack.vet/app/orders/add`)) {
             if (tab.url.includes(`(details:petandowner)`)) {
                 chrome.tabs.sendMessage(tabId, {
                     action: 'fillPetAndOwnerForm',
@@ -71,11 +51,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             }
         }
         // Google Calendar
-        else if (
-            changeInfo.status === 'complete' &&
-            tab.url &&
-            tab.url.includes('eventedit')
-        ) {
+        else if (changeInfo.status === 'complete' && tab.url && tab.url.includes('eventedit')) {
             chrome.tabs.sendMessage(tabId, {
                 action: 'createJotformLinkButton',
                 type: 'NEW',
@@ -96,15 +72,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     error: 'Could not obtain Jotform API key. Check settings.',
                 });
             }
-            console.log(
-                '%cRetrieved JotForm token: ',
-                'color: green',
-                jotformToken
-            );
+            console.log('%cRetrieved JotForm token: ', 'color: green', jotformToken);
 
-            fetch(
-                `https://api.jotform.com/submission/${submissionId}?apiKey=${jotformToken}`
-            )
+            fetch(`https://api.jotform.com/submission/${submissionId}?apiKey=${jotformToken}`)
                 .then(response => response.json())
                 .then(handleData)
                 .then(storeJotformData)
@@ -113,10 +83,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 .then(createLetter)
                 .then(createEnvelope)
                 .then(data => {
-                    console.log(
-                        'All tasks completed successfully with data:',
-                        data
-                    );
+                    console.log('All tasks completed successfully with data:', data);
                     sendResponse({ success: true, data: data });
                 })
                 .catch(error => {
@@ -130,23 +97,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
         chrome.storage.local.get(['jotformToken'], function (result) {
             const jotformToken = result.jotformToken;
-            console.log(
-                '%cRetrieved JotForm token: ',
-                'color: green',
-                jotformToken
-            );
+            console.log('%cRetrieved JotForm token: ', 'color: green', jotformToken);
 
-            fetch(
-                `https://api.jotform.com/submission/${submissionId}?apiKey=${jotformToken}`
-            )
+            fetch(`https://api.jotform.com/submission/${submissionId}?apiKey=${jotformToken}`)
                 .then(response => response.json())
                 .then(handleData)
                 .then(storeJotformData)
                 .then(data => {
-                    console.log(
-                        'All tasks completed successfully with data:',
-                        data
-                    );
+                    console.log('All tasks completed successfully with data:', data);
                     sendResponse({ success: true, data: data });
                 })
                 .catch(error => {
@@ -158,10 +116,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     } else if (message.action === 'openAndPrintDoc') {
         const docUrl = `https://docs.google.com/document/d/${message.docId}/edit`;
         chrome.tabs.create({ url: docUrl }, function (tab) {
-            chrome.tabs.onUpdated.addListener(function onTabUpdated(
-                tabId,
-                info
-            ) {
+            chrome.tabs.onUpdated.addListener(function onTabUpdated(tabId, info) {
                 if (tabId === tab.id && info.status === 'complete') {
                     chrome.tabs.sendMessage(tabId, {
                         action: 'printDoc',
@@ -197,23 +152,14 @@ function createGmailDraft(data) {
     <p style="margin: 16px 0";>I sincerely appreciate your referral and time. Please do not hesitate to contact me with any questions.</p>
 `;
     let draftId;
-    sendGmailDraft(
-        'EnterHospitalEmail@gmail.com',
-        `Notification of Euthanasia`,
-        emailBody,
-        function (error, response) {
-            if (error) {
-                console.error('Failed to create Gmail draft:', error.message);
-                return;
-            }
-            console.log(
-                '%cGmail draft created successfully:',
-                'color: green',
-                response
-            );
-            draftId = response.id;
+    sendGmailDraft('EnterHospitalEmail@gmail.com', `Notification of Euthanasia`, emailBody, function (error, response) {
+        if (error) {
+            console.error('Failed to create Gmail draft:', error.message);
+            return;
         }
-    );
+        console.log('%cGmail draft created successfully:', 'color: green', response);
+        draftId = response.id;
+    });
 
     return data;
 }
@@ -229,13 +175,7 @@ function sendGmailDraft(to, subject, body, callback) {
         const url = 'https://gmail.googleapis.com/gmail/v1/users/me/drafts';
 
         // Construct the raw email content with HTML
-        const email = [
-            `Content-Type: text/html; charset=UTF-8`,
-            `To: ${to}`,
-            `Subject: ${subject}`,
-            '',
-            body,
-        ].join('\r\n'); // Use CRLF (\r\n) as per RFC 5322
+        const email = [`Content-Type: text/html; charset=UTF-8`, `To: ${to}`, `Subject: ${subject}`, '', body].join('\r\n'); // Use CRLF (\r\n) as per RFC 5322
 
         // Encode the email in base64url format
         const base64EncodedEmail = btoa(unescape(encodeURIComponent(email)))
@@ -265,11 +205,7 @@ async function handleData(data) {
     let submissionData = extractFormData(data.content.answers);
     submissionData = await gatherAdditionalInformation(submissionData); // Await this as it's asynchronous
     submissionData.submissionDate = data.content.created_at;
-    console.log(
-        '%cSubmission Data Retrieved Successfully:',
-        'color: green',
-        submissionData
-    );
+    console.log('%cSubmission Data Retrieved Successfully:', 'color: green', submissionData);
     return submissionData;
 }
 
@@ -280,10 +216,7 @@ function extractFormData(data) {
         if (field.name && field.answer) {
             if (typeof field.answer === 'string') {
                 formData[field.name] = field.answer.trim();
-            } else if (
-                typeof field.answer === 'object' &&
-                field.answer !== null
-            ) {
+            } else if (typeof field.answer === 'object' && field.answer !== null) {
                 Object.entries(field.answer).forEach(([key, value]) => {
                     field.answer[key] = value.trim();
                 });
@@ -340,9 +273,7 @@ async function gatherAdditionalInformation(data) {
         ? 'Mailed'
         : 'Sarena';
 
-    data.pawOrNosePrint = data.privatePawOrNosePrint
-        ? data.privatePawOrNosePrint
-        : data.memorialPawOrNosePrint;
+    data.pawOrNosePrint = data.privatePawOrNosePrint ? data.privatePawOrNosePrint : data.memorialPawOrNosePrint;
 
     const storageKeys = [
         'invoiceTemplateId',
@@ -384,12 +315,7 @@ async function storeJotformData(data) {
         urnLine3 = '',
         urnLine4 = '';
 
-    if (
-        data.engravingLine1 ||
-        data.engravingLine2 ||
-        data.engravingLine3 ||
-        data.engravingLine4
-    ) {
+    if (data.engravingLine1 || data.engravingLine2 || data.engravingLine3 || data.engravingLine4) {
         isUrnEngraved = true;
         urnLine1 = data.engravingLine1;
         urnLine2 = data.engravingLine2;
@@ -467,11 +393,7 @@ function createInvoice(data) {
 
         if (!data.invoiceTemplateId) {
             console.log('Invoice Template ID is missing or empty');
-            return reject(
-                new Error(
-                    'Could not obtain Invoice Template ID. Check settings.'
-                )
-            );
+            return reject(new Error('Could not obtain Invoice Template ID. Check settings.'));
         }
 
         const currentDate = new Date().toLocaleDateString('en-US');
@@ -488,26 +410,17 @@ function createInvoice(data) {
                 name: 'Private Cremation (< 80lbs)',
                 subtotal: parseFloat(data.smallPrivateCremationPrice),
             });
-        } else if (
-            data.cremationType === 'Private' &&
-            data.approximateWeight >= 80
-        ) {
+        } else if (data.cremationType === 'Private' && data.approximateWeight >= 80) {
             products.push({
                 name: 'Private Cremation (>= 80lbs)',
                 subtotal: parseFloat(data.largePrivateCremationPrice),
             });
-        } else if (
-            data.cremationType === 'Memorial' &&
-            data.approximateWeight < 80
-        ) {
+        } else if (data.cremationType === 'Memorial' && data.approximateWeight < 80) {
             products.push({
                 name: 'Memorial Cremation (< 80lbs)',
                 subtotal: parseFloat(data.smallPrivateCremationPrice),
             });
-        } else if (
-            data.cremationType === 'Memorial' &&
-            data.approximateWeight >= 80
-        ) {
+        } else if (data.cremationType === 'Memorial' && data.approximateWeight >= 80) {
             products.push({
                 name: 'Memorial Cremation (>= 80lbs)',
                 subtotal: parseFloat(data.largePrivateCremationPrice),
@@ -533,42 +446,34 @@ function createInvoice(data) {
             products.push({
                 name: `Additional Boxed Fur Clipping x${data.additionalBoxedFurClipping}`,
                 quantity: data.additionalBoxedFurClipping,
-                subtotal:
-                    data.additionalBoxedFurClipping *
-                    parseFloat(data.furAndBoxPrice),
+                subtotal: data.additionalBoxedFurClipping * parseFloat(data.furAndBoxPrice),
             });
         }
         if (data.additionalFurClipping) {
             products.push({
                 name: `Additional Fur Clipping x${data.additionalFurClipping}`,
                 quantity: data.additionalFurClipping,
-                subtotal:
-                    data.additionalFurClipping * parseFloat(data.furPrice),
+                subtotal: data.additionalFurClipping * parseFloat(data.furPrice),
             });
         }
         if (data.additionalNosePrint) {
             products.push({
                 name: `Additional Nose Print x${data.additionalNosePrint}`,
                 quantity: data.additionalNosePrint,
-                subtotal:
-                    data.additionalNosePrint * parseFloat(data.nosePrintPrice),
+                subtotal: data.additionalNosePrint * parseFloat(data.nosePrintPrice),
             });
         }
         if (data.additonalPawPrint) {
             products.push({
                 name: `Additional Paw Print x${data.additonalPawPrint}`,
                 quantity: data.additonalPawPrint,
-                subtotal:
-                    data.additonalPawPrint * parseFloat(data.pawPrintPrice),
+                subtotal: data.additonalPawPrint * parseFloat(data.pawPrintPrice),
             });
         }
 
         console.log('Made it 1');
 
-        const subtotal = products.reduce(
-            (total, product) => total + (parseFloat(product.subtotal) || 0),
-            0
-        );
+        const subtotal = products.reduce((total, product) => total + (parseFloat(product.subtotal) || 0), 0);
         const paid = 0;
         const total = subtotal - paid;
 
@@ -582,51 +487,43 @@ function createInvoice(data) {
             products.push({ name: '', subtotal: '' });
         }
 
-        createDocFromTemplate(
-            data.invoiceTemplateId,
-            `(Invoice) ${data.nameOf}\'s Passing ${data.submissionDate}`,
-            {
-                Date: currentDate,
-                ClientName: `${data.clientName['first']} ${data.clientName['last']}`,
-                Address: `${data.address['addr_line1']}
+        createDocFromTemplate(data.invoiceTemplateId, `(Invoice) ${data.nameOf}\'s Passing ${data.submissionDate}`, {
+            Date: currentDate,
+            ClientName: `${data.clientName['first']} ${data.clientName['last']}`,
+            Address: `${data.address['addr_line1']}
                     ${data.cityStatePostal}`,
-                PhoneNumber: data.phoneNumber['full'],
-                PetName: data.nameOf,
-                Breed: data.breed,
-                Age: data.age,
-                Weight: data.approximateWeight,
-                Sex: data.sex,
-                Species: data.species,
+            PhoneNumber: data.phoneNumber['full'],
+            PetName: data.nameOf,
+            Breed: data.breed,
+            Age: data.age,
+            Weight: data.approximateWeight,
+            Sex: data.sex,
+            Species: data.species,
 
-                Product1: products[0].name,
-                Amount1: products[0].subtotal,
-                Product2: products[1].name,
-                Amount2: products[1].subtotal,
-                Product3: products[2].name,
-                Amount3: products[2].subtotal,
-                Product4: products[3].name,
-                Amount4: products[3].subtotal,
-                Product5: products[4].name,
-                Amount5: products[4].subtotal,
-                Product6: products[5].name,
-                Amount6: products[5].subtotal,
-                Product7: products[6].name,
-                Amount7: products[6].subtotal,
-                Product8: products[7].name,
-                Amount8: products[7].subtotal,
+            Product1: products[0].name,
+            Amount1: products[0].subtotal,
+            Product2: products[1].name,
+            Amount2: products[1].subtotal,
+            Product3: products[2].name,
+            Amount3: products[2].subtotal,
+            Product4: products[3].name,
+            Amount4: products[3].subtotal,
+            Product5: products[4].name,
+            Amount5: products[4].subtotal,
+            Product6: products[5].name,
+            Amount6: products[5].subtotal,
+            Product7: products[6].name,
+            Amount7: products[6].subtotal,
+            Product8: products[7].name,
+            Amount8: products[7].subtotal,
 
-                SubtotalAmt: formatAsCurrency(subtotal),
-                PaidAmt: formatAsCurrency(paid),
-                DueAmt: formatAsCurrency(total),
-            }
-        )
+            SubtotalAmt: formatAsCurrency(subtotal),
+            PaidAmt: formatAsCurrency(paid),
+            DueAmt: formatAsCurrency(total),
+        })
             .then(newDocId => {
                 // If the document creation is successful, log and resolve
-                console.log(
-                    '%cNew invoice document created with ID:',
-                    'color: green',
-                    newDocId
-                );
+                console.log('%cNew invoice document created with ID:', 'color: green', newDocId);
                 data.invoiceDocId = newDocId; // Save the new document ID in `data`
                 resolve(data); // Resolve with the updated `data` object
             })
@@ -740,43 +637,27 @@ function createDocFromTemplate(templateDocId, title, replacements) {
         copyTemplate(templateDocId, title, function (error, newDocId) {
             if (error) {
                 console.error('Error copying template:', error.message);
-                return reject(
-                    new Error('Error copying template: ' + error.message)
-                );
+                return reject(new Error('Error copying template: ' + error.message));
             }
 
             console.log('Template copied successfully. New Doc ID:', newDocId);
             console.log('Starting text replacement...');
 
-            replaceTextInDocument(
-                newDocId,
-                replacements,
-                function (error, response) {
-                    if (error) {
-                        console.error('Error replacing text:', error.message);
-                        return reject(
-                            new Error('Error replacing text: ' + error.message)
-                        );
-                    }
-
-                    console.log(
-                        'Text replaced successfully in document:',
-                        newDocId
-                    );
-                    resolve(newDocId); // Resolve the promise with the new document's ID
+            replaceTextInDocument(newDocId, replacements, function (error, response) {
+                if (error) {
+                    console.error('Error replacing text:', error.message);
+                    return reject(new Error('Error replacing text: ' + error.message));
                 }
-            );
+
+                console.log('Text replaced successfully in document:', newDocId);
+                resolve(newDocId); // Resolve the promise with the new document's ID
+            });
         });
     });
 }
 
 function copyTemplate(templateDocId, title, callback) {
-    console.log(
-        'Copying template with ID:',
-        templateDocId,
-        'and Title:',
-        title
-    );
+    console.log('Copying template with ID:', templateDocId, 'and Title:', title);
 
     authenticateGoogle(function (token) {
         const url = `https://www.googleapis.com/drive/v3/files/${templateDocId}/copy`;
@@ -853,9 +734,7 @@ function makeApiCall(url, method, data, token, callback) {
             if (!response.ok) {
                 return response.json().then(errData => {
                     console.error('API call failed:', errData);
-                    throw new Error(
-                        `API call failed with status ${response.status}: ${errData.error.message}`
-                    );
+                    throw new Error(`API call failed with status ${response.status}: ${errData.error.message}`);
                 });
             }
             return response.json();
@@ -884,22 +763,15 @@ async function createLetter(data) {
     try {
         console.log('Calling createDocFromTemplate...');
 
-        const newDocId = await createDocFromTemplate(
-            data.letterTemplateId,
-            `(Letter) ${data.nameOf}'s Passing ${data.submissionDate}`,
-            {
-                familyName: data.clientName['last'],
-                NameOfPet: data.nameOf,
-                species: data.cuteSpecies,
-                pronoun1: data.pronoun1,
-                pronoun2: data.pronoun2,
-            }
-        );
+        const newDocId = await createDocFromTemplate(data.letterTemplateId, `(Letter) ${data.nameOf}'s Passing ${data.submissionDate}`, {
+            familyName: data.clientName['last'],
+            NameOfPet: data.nameOf,
+            species: data.cuteSpecies,
+            pronoun1: data.pronoun1,
+            pronoun2: data.pronoun2,
+        });
 
-        console.log(
-            'createDocFromTemplate succeeded, new document ID:',
-            newDocId
-        );
+        console.log('createDocFromTemplate succeeded, new document ID:', newDocId);
 
         data.letterDocId = newDocId;
         console.log('Letter document ID saved in data:', data.letterDocId);
@@ -916,30 +788,18 @@ function createEnvelope(data) {
         console.log('Create Envelope');
         if (!data.envelopeTemplateId) {
             console.log('Envelope Template ID is missing or empty');
-            return reject(
-                new Error(
-                    'Could not obtain Envelope Template ID. Check settings.'
-                )
-            );
+            return reject(new Error('Could not obtain Envelope Template ID. Check settings.'));
         }
 
-        createDocFromTemplate(
-            data.envelopeTemplateId,
-            `(Envelope) ${data.nameOf}'s Passing ${data.submissionDate}`,
-            {
-                familyName: data.clientName['last'],
-                AddressLine1: data.address['addr_line1'],
-                AddressLine2: data.cityStatePostal,
-                AddressLine3: '',
-            }
-        )
+        createDocFromTemplate(data.envelopeTemplateId, `(Envelope) ${data.nameOf}'s Passing ${data.submissionDate}`, {
+            familyName: data.clientName['last'],
+            AddressLine1: data.address['addr_line1'],
+            AddressLine2: data.cityStatePostal,
+            AddressLine3: '',
+        })
             .then(newDocId => {
                 // If the document creation is successful, log and resolve
-                console.log(
-                    '%cNew envelope document created with ID:',
-                    'color: green',
-                    newDocId
-                );
+                console.log('%cNew envelope document created with ID:', 'color: green', newDocId);
                 data.envelopeDocId = newDocId; // Save the new document ID in `data`
                 resolve(data); // Resolve with the updated `data` object
             })
