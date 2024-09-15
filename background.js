@@ -152,7 +152,7 @@ function createGmailDraft(data) {
     <p style="margin: 16px 0";>I sincerely appreciate your referral and time. Please do not hesitate to contact me with any questions.</p>
 `;
     let draftId;
-    sendGmailDraft('EnterHospitalEmail@gmail.com', `Notification of Euthanasia`, emailBody, function (error, response) {
+    sendGmailDraft('', `Notification of Euthanasia`, emailBody, function (error, response) {
         if (error) {
             console.error('Failed to create Gmail draft:', error.message);
             return;

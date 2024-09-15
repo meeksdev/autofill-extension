@@ -13,16 +13,12 @@ function createFormButtonModal() {
     if (existingAutofillModal) {
         existingAutofillModal.style.display = 'flex';
 
-        const gatherButton = document.getElementById(
-            'AutofillModal-GatherButton'
-        );
+        const gatherButton = document.getElementById('AutofillModal-GatherButton');
         gatherButton.style.backgroundColor = '#4285f4';
         gatherButton.style.cursor = 'pointer';
         gatherButton.disabled = false;
 
-        const loadingText = document.getElementById(
-            'autofillModal-LoadingText'
-        );
+        const loadingText = document.getElementById('autofillModal-LoadingText');
         loadingText.style.display = 'none';
 
         return; // Don't create a new modal if one already exists
@@ -107,48 +103,30 @@ function createFormButtonModal() {
         console.log('%cSubmission ID from URL:', 'color: green', submissionId);
 
         // Send a message to the background script to fetch data from JotForm
-        chrome.runtime.sendMessage(
-            { action: 'fillDocsAndEmail', submissionId: submissionId },
-            async function (response) {
-                if (response.success) {
-                    console.log(
-                        '%cForm Submission:',
-                        'color: green',
-                        response.data
-                    );
-                    docsAndEmailButton.textContent = 'Completed.';
-                    docsAndEmailButton.style.backgroundColor = '#fff';
-                    docsAndEmailButton.style.color = 'green';
-                    docsAndEmailButton.style.cursor = 'default';
-                    loadingText.style.display = 'none';
+        chrome.runtime.sendMessage({ action: 'fillDocsAndEmail', submissionId: submissionId }, async function (response) {
+            if (response.success) {
+                console.log('%cForm Submission:', 'color: green', response.data);
+                docsAndEmailButton.textContent = 'Completed.';
+                docsAndEmailButton.style.backgroundColor = '#fff';
+                docsAndEmailButton.style.color = 'green';
+                docsAndEmailButton.style.cursor = 'default';
+                loadingText.style.display = 'none';
 
-                    window.open(
-                        `https://mail.google.com/mail/u/0/#drafts/${response.draftId}`,
-                        '_blank'
-                    );
-                    if (response.data.letterDocId)
-                        printGoogleDoc(response.data.letterDocId);
-                    if (response.data.envelopeDocId)
-                        printGoogleDoc(response.data.envelopeDocId);
-                    // if (response.data.invoiceDocId) printGoogleDoc(response.data.invoiceDocId);
-                    window.open(
-                        `https://docs.google.com/document/d/${response.data.invoiceDocId}/edit`,
-                        '_blank'
-                    );
-                } else {
-                    console.error(
-                        'Failed to Fill Docs and Email:',
-                        response.error
-                    );
-                    // alert(`Failed to Fill Crematory Site. ${response.error}`);
-                    docsAndEmailButton.textContent = `Failed: ${response.error}`;
-                    docsAndEmailButton.style.backgroundColor = '#fff';
-                    docsAndEmailButton.style.color = 'red';
-                    docsAndEmailButton.style.cursor = 'default';
-                    loadingText.style.display = 'none';
-                }
+                window.open(`https://mail.google.com/mail/u/0/#drafts/${response.draftId}`, '_blank');
+                if (response.data.letterDocId) printGoogleDoc(response.data.letterDocId);
+                if (response.data.envelopeDocId) printGoogleDoc(response.data.envelopeDocId);
+                // if (response.data.invoiceDocId) printGoogleDoc(response.data.invoiceDocId);
+                if (response.data.invoiceDocId) window.open(`https://docs.google.com/document/d/${response.data.invoiceDocId}/edit`, '_blank');
+            } else {
+                console.error('Failed to Fill Docs and Email:', response.error);
+                // alert(`Failed to Fill Crematory Site. ${response.error}`);
+                docsAndEmailButton.textContent = `Failed: ${response.error}`;
+                docsAndEmailButton.style.backgroundColor = '#fff';
+                docsAndEmailButton.style.color = 'red';
+                docsAndEmailButton.style.cursor = 'default';
+                loadingText.style.display = 'none';
             }
-        );
+        });
     });
 
     crematoryButton.addEventListener('click', () => {
@@ -163,51 +141,37 @@ function createFormButtonModal() {
         console.log('%cSubmission ID from URL:', 'color: green', submissionId);
 
         // Send a message to the background script to fetch data from JotForm
-        chrome.runtime.sendMessage(
-            { action: 'fillCrematoryForms', submissionId: submissionId },
-            async function (response) {
-                if (response.success) {
-                    console.log(
-                        '%cForm Submission:',
-                        'color: green',
-                        response.data
-                    );
-                    // modal.style.display = "none";
-                    loadingText.style.display = 'none';
-                    crematoryButton.style.backgroundColor = '#fff';
+        chrome.runtime.sendMessage({ action: 'fillCrematoryForms', submissionId: submissionId }, async function (response) {
+            if (response.success) {
+                console.log('%cForm Submission:', 'color: green', response.data);
+                // modal.style.display = "none";
+                loadingText.style.display = 'none';
+                crematoryButton.style.backgroundColor = '#fff';
 
-                    console.log(response.data.cremationType);
-                    if (response.data.cremationType !== 'Retain') {
-                        crematoryButton.textContent = 'Completed.';
-                        crematoryButton.style.color = 'green';
-                        chrome.storage.local.set({
-                            isAutofilling: true,
-                        });
-                        window.open(
-                            `https://www.pawsetrack.vet/app/dashboard`,
-                            '_blank'
-                        );
-                    } else {
-                        console.log('Client Will Retain Remains');
-                        crematoryButton.textContent =
-                            'Client Will Retain Remains.';
-                        crematoryButton.style.color = 'black';
-                        crematoryButton.style.cursor = 'default';
-                    }
+                console.log(response.data.cremationType);
+                if (response.data.cremationType !== 'Retain') {
+                    crematoryButton.textContent = 'Completed.';
+                    crematoryButton.style.color = 'green';
+                    chrome.storage.local.set({
+                        isAutofilling: true,
+                    });
+                    window.open(`https://www.pawsetrack.vet/app/dashboard`, '_blank');
                 } else {
-                    console.error(
-                        'Failed to Fill Crematory Site:',
-                        response.error
-                    );
-                    // alert(`Failed to Fill Crematory Site. ${response.error}`);
-                    crematoryButton.textContent = `Failed: ${response.error}`;
-                    crematoryButton.style.backgroundColor = '#fff';
-                    crematoryButton.style.color = 'red';
+                    console.log('Client Will Retain Remains');
+                    crematoryButton.textContent = 'Client Will Retain Remains.';
+                    crematoryButton.style.color = 'black';
                     crematoryButton.style.cursor = 'default';
-                    loadingText.style.display = 'none';
                 }
+            } else {
+                console.error('Failed to Fill Crematory Site:', response.error);
+                // alert(`Failed to Fill Crematory Site. ${response.error}`);
+                crematoryButton.textContent = `Failed: ${response.error}`;
+                crematoryButton.style.backgroundColor = '#fff';
+                crematoryButton.style.color = 'red';
+                crematoryButton.style.cursor = 'default';
+                loadingText.style.display = 'none';
             }
-        );
+        });
     });
 
     // Add an event listener to the close button to hide the modal

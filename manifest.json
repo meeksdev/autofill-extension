@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Sarena Autofill",
     "description": "Tool for Veterinarians that automates multiple common processes.",
-    "version": "1.0",
+    "version": "1.1",
     "permissions": [
         "tabs",
         "identity",
@@ -42,11 +42,7 @@
     ],
     "oauth2": {
         "client_id": "746464567000-gelv7pa051rulpmuq8u9c48esb8jkuii.apps.googleusercontent.com",
-        "scopes": [
-            "https://www.googleapis.com/auth/gmail.compose",
-            "https://www.googleapis.com/auth/documents",
-            "https://www.googleapis.com/auth/drive"
-        ]
+        "scopes": ["https://www.googleapis.com/auth/gmail.compose", "https://www.googleapis.com/auth/documents", "https://www.googleapis.com/auth/drive"]
     },
     "host_permissions": ["*://*.google.com/*", "*://*.googleapis.com/*"]
 }
