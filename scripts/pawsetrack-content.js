@@ -32,49 +32,50 @@ const memorialKeys = [
 ];
 const reviewKeys = ['collectionLocation', 'petHospital'];
 
-chrome.runtime.onMessage.addListener((message, sender, response) => {
+chrome.runtime.onMessage.addListener(async (message, sender, response) => {
     const { type, action } = message;
+    console.log(message);
 
-    getStoredData(['isAutofilling'], async ({ isAutofilling }) => {
+    /* getStoredData(['isAutofilling'], async ({ isAutofilling }) => {
         if (!isAutofilling) {
             return;
-        }
+        } */
 
-        if (type === 'NEW') {
-            if (action === 'startNewOrder') {
-                startNewOrder();
-            } else if (action === 'selectCremationType') {
-                getStoredData(['cremationType'], ({ cremationType }) => {
-                    selectCremationType(cremationType);
-                });
-            } else if (action === 'fillPetAndOwnerForm') {
-                const form = await waitForCondition(() => document.forms[0]);
-                getStoredData(petAndOwnerKeys, storage => {
-                    fillPetAndOwnerForm(form, storage);
-                });
-            } else if (action === 'fillBundlesForm') {
-                getStoredData(bundlesKeys, storage => {
-                    fillBundlesForm(storage);
-                });
-            } else if (action === 'selectUrn') {
-                getStoredData(urnKeys, storage => {
-                    selectUrn(storage);
-                });
-            } else if (action === 'fillMemorialForm') {
-                getStoredData(memorialKeys, storage => {
-                    fillMemorialForm(storage);
-                });
-            } else if (action === 'fillReviewForm') {
-                getStoredData(reviewKeys, storage => {
-                    fillReviewForm(storage);
-                });
+    if (type === 'NEW') {
+        if (action === 'startNewOrder') {
+            startNewOrder(message.tabId);
+        } else if (action === 'selectCremationType') {
+            getStoredData(['cremationType'], ({ cremationType }) => {
+                selectCremationType(cremationType, message.tabId);
+            });
+        } else if (action === 'fillPetAndOwnerForm') {
+            const form = await waitForCondition(() => document.forms[0]);
+            getStoredData(petAndOwnerKeys, storage => {
+                fillPetAndOwnerForm(form, storage, message.tabId);
+            });
+        } else if (action === 'fillBundlesForm') {
+            getStoredData(bundlesKeys, storage => {
+                fillBundlesForm(storage, message.tabId);
+            });
+        } else if (action === 'selectUrn') {
+            getStoredData(urnKeys, storage => {
+                selectUrn(storage, message.tabId);
+            });
+        } else if (action === 'fillMemorialForm') {
+            getStoredData(memorialKeys, storage => {
+                fillMemorialForm(storage, message.tabId);
+            });
+        } else if (action === 'fillReviewForm') {
+            getStoredData(reviewKeys, storage => {
+                fillReviewForm(storage);
+            });
 
-                chrome.storage.local.set({
-                    isAutofilling: false,
-                });
-            }
+            /* chrome.storage.local.set({
+                isAutofilling: false,
+            }); */
         }
-    });
+    }
+    // });
 });
 
 function getStoredData(keys, callback) {
@@ -90,15 +91,17 @@ function getStoredData(keys, callback) {
 }
 
 /*** DASHBOARD PAGE ***/
-async function startNewOrder() {
+async function startNewOrder(tabId) {
     console.log('startNewOrder');
     const newOrderButton = await waitForCondition(() => [...document.querySelectorAll('button')].find(button => button.textContent.includes('New Order')));
     console.log(newOrderButton);
     newOrderButton.click();
+
+    chrome.runtime.sendMessage({ action: 'selectCremationType', tabId: tabId });
 }
 
 /*** START ORDER PAGE ***/
-async function selectCremationType(cremationType) {
+async function selectCremationType(cremationType, tabId) {
     console.log(cremationType);
 
     if (cremationType === 'Private') {
@@ -114,10 +117,12 @@ async function selectCremationType(cremationType) {
         console.log(cremationButton);
         cremationButton.click();
     }
+
+    chrome.runtime.sendMessage({ action: 'fillPetAndOwnerForm', tabId: tabId });
 }
 
 /*** PET AND OWNER PAGE ***/
-async function fillPetAndOwnerForm(form, storage) {
+async function fillPetAndOwnerForm(form, storage, tabId) {
     // Loop through each input element in the form and log its name
     /* console.log(form.elements.length);
 for (let i = 0; i < form.elements.length; i++) {
@@ -194,10 +199,12 @@ for (let i = 0; i < form.elements.length; i++) {
     nextPageButton.click();
 
     // createModalWindow();
+
+    chrome.runtime.sendMessage({ action: 'fillBundlesForm', tabId: tabId });
 }
 
 /*** BUNDLED PRODUCTS PAGE ***/
-async function fillBundlesForm(storage) {
+async function fillBundlesForm(storage, tabId) {
     console.log(storage.pawOrNosePrint);
 
     if (storage.pawOrNosePrint === 'Nose print') {
@@ -216,10 +223,12 @@ async function fillBundlesForm(storage) {
     //go to the next page
     const nextPageButton = document.querySelector('button.btn.btn-primary.ms-2');
     nextPageButton.click();
+
+    chrome.runtime.sendMessage({ action: 'selectUrn', tabId: tabId });
 }
 
 /*** URN PAGE ***/
-async function selectUrn(storage) {
+async function selectUrn(storage, tabId) {
     console.log('selectUrn');
 
     const urnButton = await waitForCondition(() =>
@@ -265,6 +274,8 @@ async function selectUrn(storage) {
     //go to the next page
     const nextPageButton = document.querySelector('button.btn.btn-primary.ms-2');
     nextPageButton.click();
+
+    chrome.runtime.sendMessage({ action: 'fillMemorialForm', tabId: tabId });
 }
 
 async function handleUrnText(storage, urnWindow) {
@@ -301,7 +312,7 @@ async function handleUrnText(storage, urnWindow) {
 }
 
 /*** MEMORIAL PRODUCTS PAGE ***/
-async function fillMemorialForm(storage) {
+async function fillMemorialForm(storage, tabId) {
     // COMMUNAL CREMATION FIX
     /* if (storage.cremationType === "Memorial" && storage.pawOrNosePrint === "Paw print") {
         storage.additionalPawPrint = storage.additionalPawPrint ? storage.additionalPawPrint++ : 1;
@@ -434,6 +445,8 @@ async function fillMemorialForm(storage) {
     //go to the next page
     const nextPageButton = document.querySelector('button.btn.btn-primary.ms-2');
     nextPageButton.click();
+
+    chrome.runtime.sendMessage({ action: 'fillReviewForm', tabId: tabId });
 }
 
 /*** REVIEW SUMMARY PAGE ***/

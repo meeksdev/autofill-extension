@@ -12,7 +12,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             });
         }
         // Crematory
-        else if (changeInfo.status === 'complete' && tab.url && tab.url.includes(`pawsetrack.vet/app/dashboard`)) {
+        /* else if (changeInfo.status === 'complete' && tab.url && tab.url.includes(`pawsetrack.vet/app/dashboard`)) {
             chrome.tabs.sendMessage(tabId, {
                 action: 'startNewOrder',
                 type: 'NEW',
@@ -49,7 +49,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                     type: 'NEW',
                 });
             }
-        }
+        } */
         // Google Calendar
         else if (changeInfo.status === 'complete' && tab.url && tab.url.includes('eventedit')) {
             chrome.tabs.sendMessage(tabId, {
@@ -113,6 +113,67 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 });
         });
         return true; // Keep the messaging channel open for async response
+    } else if (message.action === 'startNewOrder') {
+        console.log('startNewOrder');
+        const crematoryUrl = 'https://www.pawsetrack.vet/app/dashboard';
+        chrome.tabs.create({ url: crematoryUrl }, function (tab) {
+            chrome.tabs.onUpdated.addListener(function onTabUpdated(tabId, info) {
+                if (tabId === tab.id && info.status === 'complete') {
+                    chrome.tabs.sendMessage(tabId, {
+                        action: 'startNewOrder',
+                        type: 'NEW',
+                        tabId: tabId,
+                    });
+                    chrome.tabs.onUpdated.removeListener(onTabUpdated);
+                }
+            });
+        });
+
+        /* chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+            const targetTabId = message.targetTabId || tabs[0].id;
+            console.log(targetTabId);
+            chrome.tabs.sendMessage(targetTabId, {
+                action: 'startNewOrder',
+                type: 'NEW',
+            });
+        }); */
+    } else if (message.action === 'selectCremationType') {
+        console.log('selectCremationType');
+        chrome.tabs.sendMessage(message.tabId, {
+            action: 'selectCremationType',
+            type: 'NEW',
+            tabId: message.tabId,
+        });
+    } else if (message.action === 'fillPetAndOwnerForm') {
+        chrome.tabs.sendMessage(message.tabId, {
+            action: 'fillPetAndOwnerForm',
+            type: 'NEW',
+            tabId: message.tabId,
+        });
+    } else if (message.action === 'fillBundlesForm') {
+        chrome.tabs.sendMessage(message.tabId, {
+            action: 'fillBundlesForm',
+            type: 'NEW',
+            tabId: message.tabId,
+        });
+    } else if (message.action === 'selectUrn') {
+        chrome.tabs.sendMessage(message.tabId, {
+            action: 'selectUrn',
+            type: 'NEW',
+            tabId: message.tabId,
+        });
+    } else if (message.action === 'fillMemorialForm') {
+        chrome.tabs.sendMessage(message.tabId, {
+            action: 'fillMemorialForm',
+            type: 'NEW',
+            tabId: message.tabId,
+        });
+    } else if (message.action === 'fillReviewForm') {
+        chrome.tabs.sendMessage(message.tabId, {
+            action: 'fillReviewForm',
+            type: 'NEW',
+            tabId: message.tabId,
+        });
     } else if (message.action === 'openAndPrintDoc') {
         const docUrl = `https://docs.google.com/document/d/${message.docId}/edit`;
         chrome.tabs.create({ url: docUrl }, function (tab) {

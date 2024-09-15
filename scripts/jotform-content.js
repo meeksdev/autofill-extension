@@ -152,10 +152,11 @@ function createFormButtonModal() {
                 if (response.data.cremationType !== 'Retain') {
                     crematoryButton.textContent = 'Completed.';
                     crematoryButton.style.color = 'green';
-                    chrome.storage.local.set({
+                    /* chrome.storage.local.set({
                         isAutofilling: true,
-                    });
-                    window.open(`https://www.pawsetrack.vet/app/dashboard`, '_blank');
+                    }); */
+                    // window.open(`https://www.pawsetrack.vet/app/dashboard`, '_blank');
+                    chrome.runtime.sendMessage({ action: 'startNewOrder' });
                 } else {
                     console.log('Client Will Retain Remains');
                     crematoryButton.textContent = 'Client Will Retain Remains.';
