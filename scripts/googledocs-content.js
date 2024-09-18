@@ -4,37 +4,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'printDoc') {
         // Wait for the document to fully load before printing
         window.onload = function () {
-            printAndDelete();
+            printAndDelete(message.docId);
         };
 
         // If the document is already fully loaded, print immediately
         if (document.readyState === 'complete') {
-            printAndDelete();
+            printAndDelete(message.docId);
         }
     }
 });
 
-async function printAndDelete() {
-    // window.document.close();
-    // window.focus();
-    // const canvas = document.getElementsByClassName('kix-appview-editor')[0];
-    // console.log(canvas);
-    // canvas.click();
-    // canvas.dispatchEvent(inputEvent);
-
-    // window.print();
+async function printAndDelete(docId) {
+    console.log('deleteDoc');
     chrome.runtime.sendMessage({
         action: 'deleteDoc',
-        docId: message.docId,
+        docId: docId,
     });
-    // createFormButtonModal();
 }
 
-function delay(ms) {
+/* function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
+} */
 
-function waitForCondition(checkCondition, intervalTime = 100, maxWaitTime = 60000) {
+/* function waitForCondition(checkCondition, intervalTime = 100, maxWaitTime = 60000) {
     return new Promise((resolve, reject) => {
         const startTime = Date.now();
 
@@ -53,9 +45,9 @@ function waitForCondition(checkCondition, intervalTime = 100, maxWaitTime = 6000
             }
         }, intervalTime);
     });
-}
+} */
 
-function createFormButtonModal() {
+/* function createFormButtonModal() {
     // Check if modal already exists
     const existingAutofillModal = document.getElementById('AutofillModal');
     if (existingAutofillModal) {
@@ -126,3 +118,4 @@ function createFormButtonModal() {
         modal.style.display = 'none';
     });
 }
+ */

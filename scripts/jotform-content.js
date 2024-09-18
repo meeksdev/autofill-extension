@@ -146,12 +146,12 @@ function createFormButtonModal() {
                 console.log('%cForm Submission:', 'color: green', response.data);
                 // modal.style.display = "none";
                 loadingText.style.display = 'none';
-                crematoryButton.style.backgroundColor = '#fff';
 
                 console.log(response.data.cremationType);
                 if (response.data.cremationType !== 'Retain') {
                     crematoryButton.textContent = 'Completed.';
                     crematoryButton.style.color = 'green';
+                    crematoryButton.style.backgroundColor = '#fff';
                     /* chrome.storage.local.set({
                         isAutofilling: true,
                     }); */
@@ -162,6 +162,7 @@ function createFormButtonModal() {
                     crematoryButton.textContent = 'Client Will Retain Remains.';
                     crematoryButton.style.color = 'black';
                     crematoryButton.style.cursor = 'default';
+                    crematoryButton.style.backgroundColor = '#fff';
                 }
             } else {
                 console.error('Failed to Fill Crematory Site:', response.error);
