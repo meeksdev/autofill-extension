@@ -18,7 +18,7 @@ const petAndOwnerKeys = [
     'clientAddress1',
     'clientAddress2',
 ];
-const bundlesKeys = ['pawOrNosePrint'];
+const bundlesKeys = ['pawOrNosePrint', 'cremationType'];
 const urnKeys = ['urnChoice', 'isUrnEngraved', 'urnLine1', 'urnLine2', 'urnLine3', 'urnLine4'];
 const memorialKeys = [
     'pawOrNosePrint',
@@ -224,7 +224,8 @@ async function fillBundlesForm(storage, tabId) {
     const nextPageButton = document.querySelector('button.btn.btn-primary.ms-2');
     nextPageButton.click();
 
-    chrome.runtime.sendMessage({ action: 'selectUrn', tabId: tabId });
+    if (storage.cremationType === 'Private') chrome.runtime.sendMessage({ action: 'selectUrn', tabId: tabId });
+    if (storage.cremationType === 'Memorial') chrome.runtime.sendMessage({ action: 'fillMemorialForm', tabId: tabId });
 }
 
 /*** URN PAGE ***/
