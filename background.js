@@ -11,45 +11,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                 type: 'NEW',
             });
         }
-        // Crematory
-        /* else if (changeInfo.status === 'complete' && tab.url && tab.url.includes(`pawsetrack.vet/app/dashboard`)) {
-            chrome.tabs.sendMessage(tabId, {
-                action: 'startNewOrder',
-                type: 'NEW',
-            });
-        } else if (changeInfo.status === 'complete' && tab.url && tab.url.includes(`pawsetrack.vet/app/orders/start`)) {
-            chrome.tabs.sendMessage(tabId, {
-                action: 'selectCremationType',
-                type: 'NEW',
-            });
-        } else if (changeInfo.status === 'complete' && tab.url && tab.url.includes(`pawsetrack.vet/app/orders/add`)) {
-            if (tab.url.includes(`(details:petandowner)`)) {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'fillPetAndOwnerForm',
-                    type: 'NEW',
-                });
-            } else if (tab.url.includes(`(details:bundles)`)) {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'fillBundlesForm',
-                    type: 'NEW',
-                });
-            } else if (tab.url.includes(`(details:urn)`)) {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'selectUrn',
-                    type: 'NEW',
-                });
-            } else if (tab.url.includes(`(details:memorial)`)) {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'fillMemorialForm',
-                    type: 'NEW',
-                });
-            } else if (tab.url.includes(`(details:review)`)) {
-                chrome.tabs.sendMessage(tabId, {
-                    action: 'fillReviewForm',
-                    type: 'NEW',
-                });
-            }
-        } */
         // Google Calendar
         else if (changeInfo.status === 'complete' && tab.url && tab.url.includes('eventedit')) {
             chrome.tabs.sendMessage(tabId, {
@@ -80,9 +41,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 .then(storeJotformData)
                 .then(createGmailDraft)
                 .then(deleteOldDocs)
-                .then(createInvoice)
-                .then(createLetter)
-                .then(createEnvelope)
+                // .then(createInvoice)
+                // .then(createLetter)
+                // .then(createEnvelope)
                 .then(data => {
                     console.log('All tasks completed successfully with data:', data);
                     sendResponse({ success: true, data: data });
@@ -212,6 +173,29 @@ function createGmailDraft(data) {
     <p style="margin: 16px 0";>I regret to inform you of the passing of our mutual patient, ${data.nameOf}, who was humanely euthanized in the comfort of home due to declining quality of life. My condolences for the loss of your patient.<p>
 
     <p style="margin: 16px 0";>I sincerely appreciate your referral and time. Please do not hesitate to contact me with any questions.</p>
+
+    <div;>
+        <b>Sarena Olsen, MS, DVM, CPEV</b>
+    </div>
+    <div>Peace for Paws: Private In-Home Pet Euthanasia</div>
+    <div>
+        <a
+            href="http://peaceforpawsvet.com/"
+            target="_blank"
+            data-saferedirecturl="https://www.google.com/url?q=http://peaceforpawsvet.com&amp;amp;source=gmail&amp;amp;ust=1727114730157000&amp;amp;usg=AOvVaw3sjhFcQA18PE8JVA6NEa0Z"
+            >peaceforpawsvet.com</a
+        >
+    </div>
+    <div>(702) 530-8262</div>
+    <div>
+        <img
+            width="200"
+            height="87"
+            src="https://ci3.googleusercontent.com/mail-sig/AIorK4ybvt6BB2r5cFrbGOG1ZSBCeB2ge2U7hNDALg-hvDcZR55HRlQbo5GnBV96TRyNGdxiWXiE3C5NnhzZ"
+            class="CToWUd"
+            data-bit="iit"
+        />
+    </div>
 `;
     let draftId;
     sendGmailDraft('', `Notification of Euthanasia`, emailBody, function (error, response) {
