@@ -1,4 +1,4 @@
-const inputEvent = new Event('input', { bubbles: true });
+/* const inputEvent = new Event('input', { bubbles: true });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'printDoc') {
@@ -20,7 +20,7 @@ async function printAndDelete(docId) {
         action: 'deleteDoc',
         docId: docId,
     });
-}
+} */
 
 /* function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));

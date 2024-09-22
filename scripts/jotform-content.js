@@ -152,10 +152,6 @@ function createFormButtonModal() {
                     crematoryButton.textContent = 'Completed.';
                     crematoryButton.style.color = 'green';
                     crematoryButton.style.backgroundColor = '#fff';
-                    /* chrome.storage.local.set({
-                        isAutofilling: true,
-                    }); */
-                    // window.open(`https://www.pawsetrack.vet/app/dashboard`, '_blank');
                     chrome.runtime.sendMessage({ action: 'startNewOrder' });
                 } else {
                     console.log('Client Will Retain Remains');

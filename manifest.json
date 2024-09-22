@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "Sarena Autofill",
+    "name": "Sarena Autofill (Testing)",
     "description": "Tool for Veterinarians that automates multiple common processes.",
     "version": "1.3",
     "permissions": [
@@ -26,10 +26,6 @@
             "matches": ["https://www.jotform.com/*"]
         },
         {
-            "js": ["scripts/googledocs-content.js"],
-            "matches": ["https://docs.google.com/*"]
-        },
-        {
             "js": ["scripts/pawsetrack-content.js"],
             "matches": ["https://www.pawsetrack.vet/*"],
             "run_at": "document_end"
@@ -41,7 +37,7 @@
         }
     ],
     "oauth2": {
-        "client_id": "746464567000-u21pn0pa9a5q18fpmeqg9hp7jr2vt3d1.apps.googleusercontent.com",
+        "client_id": "746464567000-su8m4egfppi7mvhln595jjbgg2fh3vcj.apps.googleusercontent.com",
         "scopes": ["https://www.googleapis.com/auth/gmail.compose", "https://www.googleapis.com/auth/documents", "https://www.googleapis.com/auth/drive"]
     },
     "host_permissions": ["*://*.google.com/*", "*://*.googleapis.com/*"]

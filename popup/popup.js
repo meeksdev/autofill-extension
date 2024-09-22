@@ -1,91 +1,41 @@
-/* document.addEventListener("DOMContentLoaded", function () {
-    const saveButton = document.getElementById("saveButton");
-    const jotformTokenInput = document.getElementById("jotformToken");
-    const jotformFormIdInput = document.getElementById("jotformFormId");
-    const letterTemplateIdInput = document.getElementById("letterTemplateId");
-    const envelopeTemplateIdInput = document.getElementById("envelopeTemplateId");
-    const statusMessage = document.getElementById("statusMessage");
-
-    chrome.storage.local.get(["jotformToken", "jotformFormId", "letterTemplateId", "envelopeTemplateId"], function (result) {
-        const jotformToken = result.jotformToken;
-        const jotformFormId = result.jotformFormId;
-        const letterTemplateId = result.letterTemplateId;
-        const envelopeTemplateId = result.envelopeTemplateId;
-
-        if (jotformToken) {
-            jotformTokenInput.value = jotformToken;
-        }
-        if (jotformFormId) {
-            jotformFormIdInput.value = jotformFormId;
-        }
-        if (letterTemplateId) {
-            letterTemplateIdInput.value = letterTemplateId;
-        }
-        if (envelopeTemplateId) {
-            envelopeTemplateIdInput.value = envelopeTemplateId;
-        }
-    });
-
-    saveButton.addEventListener("click", function () {
-        const jotformToken = jotformTokenInput.value;
-        const jotformFormId = jotformFormIdInput.value;
-        const letterTemplateId = letterTemplateIdInput.value;
-        const envelopeTemplateId = envelopeTemplateIdInput.value;
-
-        // Store data in chrome.storage.local
-        chrome.storage.local.set(
-            {
-                jotformToken: jotformToken,
-                jotformFormId: jotformFormId,
-                letterTemplateId: letterTemplateId,
-                envelopeTemplateId: envelopeTemplateId,
-            },
-            function () {
-                // Notify that we saved the data
-                statusMessage.textContent = "Data saved successfully!";
-            }
-        );
-    });
-}); */
-
-document.addEventListener("DOMContentLoaded", function () {
-    const saveButton = document.getElementById("saveButton");
-    const jotformTokenInput = document.getElementById("jotformToken");
-    const jotformFormIdInput = document.getElementById("jotformFormId");
-    const letterTemplateIdInput = document.getElementById("letterTemplateId");
-    const envelopeTemplateIdInput = document.getElementById("envelopeTemplateId");
-    const invoiceTemplateIdInput = document.getElementById("invoiceTemplateId");
-    const euthanasiaPriceInput = document.getElementById("euthanasiaPrice");
-    const smallPrivateCremationPriceInput = document.getElementById("smallPrivateCremationPrice");
-    const largePrivateCremationPriceInput = document.getElementById("largePrivateCremationPrice");
-    const smallMemorialCremationPriceInput = document.getElementById("smallMemorialCremationPrice");
-    const largeMemorialCremationPriceInput = document.getElementById("largeMemorialCremationPrice");
-    const furPriceInput = document.getElementById("furPrice");
-    const furAndBoxPriceInput = document.getElementById("furAndBoxPrice");
-    const clayPawPriceInput = document.getElementById("clayPawPrice");
-    const clayNosePriceInput = document.getElementById("clayNosePrice");
-    const pawPrintPriceInput = document.getElementById("pawPrintPrice");
-    const nosePrintPriceInput = document.getElementById("nosePrintPrice");
-    const statusMessage = document.getElementById("statusMessage");
+document.addEventListener('DOMContentLoaded', function () {
+    const saveButton = document.getElementById('saveButton');
+    const jotformTokenInput = document.getElementById('jotformToken');
+    const jotformFormIdInput = document.getElementById('jotformFormId');
+    const letterTemplateIdInput = document.getElementById('letterTemplateId');
+    const envelopeTemplateIdInput = document.getElementById('envelopeTemplateId');
+    const invoiceTemplateIdInput = document.getElementById('invoiceTemplateId');
+    const euthanasiaPriceInput = document.getElementById('euthanasiaPrice');
+    const smallPrivateCremationPriceInput = document.getElementById('smallPrivateCremationPrice');
+    const largePrivateCremationPriceInput = document.getElementById('largePrivateCremationPrice');
+    const smallMemorialCremationPriceInput = document.getElementById('smallMemorialCremationPrice');
+    const largeMemorialCremationPriceInput = document.getElementById('largeMemorialCremationPrice');
+    const furPriceInput = document.getElementById('furPrice');
+    const furAndBoxPriceInput = document.getElementById('furAndBoxPrice');
+    const clayPawPriceInput = document.getElementById('clayPawPrice');
+    const clayNosePriceInput = document.getElementById('clayNosePrice');
+    const pawPrintPriceInput = document.getElementById('pawPrintPrice');
+    const nosePrintPriceInput = document.getElementById('nosePrintPrice');
+    const statusMessage = document.getElementById('statusMessage');
 
     chrome.storage.local.get(
         [
-            "jotformToken",
-            "jotformFormId",
-            "letterTemplateId",
-            "envelopeTemplateId",
-            "invoiceTemplateId",
-            "euthanasiaPrice",
-            "smallPrivateCremationPrice",
-            "largePrivateCremationPrice",
-            "smallMemorialCremationPrice",
-            "largeMemorialCremationPrice",
-            "furPrice",
-            "furAndBoxPrice",
-            "clayPawPrice",
-            "clayNosePrice",
-            "pawPrintPrice",
-            "nosePrintPrice",
+            'jotformToken',
+            'jotformFormId',
+            'letterTemplateId',
+            'envelopeTemplateId',
+            'invoiceTemplateId',
+            'euthanasiaPrice',
+            'smallPrivateCremationPrice',
+            'largePrivateCremationPrice',
+            'smallMemorialCremationPrice',
+            'largeMemorialCremationPrice',
+            'furPrice',
+            'furAndBoxPrice',
+            'clayPawPrice',
+            'clayNosePrice',
+            'pawPrintPrice',
+            'nosePrintPrice',
         ],
         function (result) {
             const jotformToken = result.jotformToken;
@@ -124,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     );
 
-    saveButton.addEventListener("click", function () {
+    saveButton.addEventListener('click', function () {
         const jotformToken = jotformTokenInput.value.trim();
         const jotformFormId = jotformFormIdInput.value.trim();
         const letterTemplateId = letterTemplateIdInput.value.trim();
@@ -162,7 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 nosePrintPrice,
             },
             function () {
-                statusMessage.textContent = "Data saved successfully!";
+                statusMessage.textContent = 'Data saved successfully!';
             }
         );
     });

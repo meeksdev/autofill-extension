@@ -79,6 +79,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 .then(handleData)
                 .then(storeJotformData)
                 .then(createGmailDraft)
+                .then(deleteOldDocs)
                 .then(createInvoice)
                 .then(createLetter)
                 .then(createEnvelope)
@@ -700,10 +701,24 @@ function createDocFromTemplate(templateDocId, title, replacements) {
                 console.error('Error copying template:', error.message);
                 return reject(new Error('Error copying template: ' + error.message));
             }
-
             console.log('Template copied successfully. New Doc ID:', newDocId);
-            console.log('Starting text replacement...');
 
+            const newDoc = {
+                id: newDocId,
+                creationDate: new Date().toISOString(),
+            };
+            chrome.storage.local.get(['recentDocs'], function (result) {
+                let recentDocs = result.recentDocs;
+                if (!recentDocs) recentDocs = [];
+
+                recentDocs.push(newDoc);
+
+                chrome.storage.local.set({ recentDocs: recentDocs }, function () {
+                    console.log('Recent documents updated successfully', recentDocs);
+                });
+            });
+
+            console.log('Starting text replacement...');
             replaceTextInDocument(newDocId, replacements, function (error, response) {
                 if (error) {
                     console.error('Error replacing text:', error.message);
@@ -869,6 +884,47 @@ function createEnvelope(data) {
                 console.error('Error in createEnvelope:', error);
                 reject(error); // Reject the promise with the error
             });
+    });
+}
+
+function deleteOldDocs(data) {
+    return new Promise((resolve, reject) => {
+        console.log('Starting deleteOldDocs function');
+
+        chrome.storage.local.get(['recentDocs'], function (result) {
+            let docs = result.recentDocs;
+            if (!docs) {
+                console.log('No recent documents found');
+                return resolve(data); // If no recent documents, resolve the promise
+            }
+
+            const currentDate = new Date();
+            const newRecentDocs = docs.filter(doc => {
+                if (!doc.creationDate) {
+                    console.log('No creation date found for document:', doc);
+                    return false;
+                }
+
+                const creationDate = new Date(doc.creationDate);
+                if (isNaN(creationDate.getTime())) {
+                    console.log('Invalid creation date for document:', doc);
+                    return false;
+                }
+
+                if (currentDate - creationDate > 7200000) {
+                    //if creation date was more than 2 hours ago...
+                    deleteDocument(doc.id);
+                    return false;
+                } else {
+                    return true;
+                }
+            });
+
+            chrome.storage.local.set({ recentDocs: newRecentDocs }, function () {
+                console.log('Recent documents updated successfully', newRecentDocs);
+                resolve(data); // Resolve the promise with the updated recentDocs array
+            });
+        });
     });
 }
 

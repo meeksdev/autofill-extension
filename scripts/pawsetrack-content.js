@@ -36,49 +36,39 @@ chrome.runtime.onMessage.addListener(async (message, sender, response) => {
     const { type, action } = message;
     console.log(message);
 
-    /* getStoredData(['isAutofilling'], async ({ isAutofilling }) => {
-        if (!isAutofilling) {
-            return;
-        } */
-
     if (type === 'NEW') {
         if (action === 'startNewOrder') {
             startNewOrder(message.tabId);
         } else if (action === 'selectCremationType') {
-            getStoredData(['cremationType'], ({ cremationType }) => {
+            getStoredSessionData(['cremationType'], ({ cremationType }) => {
                 selectCremationType(cremationType, message.tabId);
             });
         } else if (action === 'fillPetAndOwnerForm') {
             const form = await waitForCondition(() => document.forms[0]);
-            getStoredData(petAndOwnerKeys, storage => {
+            getStoredSessionData(petAndOwnerKeys, storage => {
                 fillPetAndOwnerForm(form, storage, message.tabId);
             });
         } else if (action === 'fillBundlesForm') {
-            getStoredData(bundlesKeys, storage => {
+            getStoredSessionData(bundlesKeys, storage => {
                 fillBundlesForm(storage, message.tabId);
             });
         } else if (action === 'selectUrn') {
-            getStoredData(urnKeys, storage => {
+            getStoredSessionData(urnKeys, storage => {
                 selectUrn(storage, message.tabId);
             });
         } else if (action === 'fillMemorialForm') {
-            getStoredData(memorialKeys, storage => {
+            getStoredSessionData(memorialKeys, storage => {
                 fillMemorialForm(storage, message.tabId);
             });
         } else if (action === 'fillReviewForm') {
-            getStoredData(reviewKeys, storage => {
+            getStoredSessionData(reviewKeys, storage => {
                 fillReviewForm(storage);
             });
-
-            /* chrome.storage.local.set({
-                isAutofilling: false,
-            }); */
         }
     }
-    // });
 });
 
-function getStoredData(keys, callback) {
+function getStoredSessionData(keys, callback) {
     chrome.storage.local.get(keys, function (result) {
         keys.forEach(key => {
             if (!result[key] && key !== 'clientAddress2') {

@@ -13,6 +13,7 @@ const excludeFiles = [
     'README.md',
     'LICENSE.txt',
     'terser.config.js',
+    'manifest.json',
     // Add other excluded files here
 ];
 
