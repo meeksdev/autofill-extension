@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Sarena Autofill (Testing)",
     "description": "Tool for Veterinarians that automates multiple common processes.",
-    "version": "1.3",
+    "version": "1.4",
     "permissions": [
         "tabs",
         "identity",

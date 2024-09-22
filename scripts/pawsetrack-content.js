@@ -17,6 +17,7 @@ const petAndOwnerKeys = [
     'clientPhone',
     'clientAddress1',
     'clientAddress2',
+    'clientApartmentNumber',
 ];
 const bundlesKeys = ['pawOrNosePrint', 'cremationType'];
 const urnKeys = ['urnChoice', 'isUrnEngraved', 'urnLine1', 'urnLine2', 'urnLine3', 'urnLine4'];
@@ -113,15 +114,6 @@ async function selectCremationType(cremationType, tabId) {
 
 /*** PET AND OWNER PAGE ***/
 async function fillPetAndOwnerForm(form, storage, tabId) {
-    // Loop through each input element in the form and log its name
-    /* console.log(form.elements.length);
-for (let i = 0; i < form.elements.length; i++) {
-    const element = form.elements[i];
-    if (element.tagName.toLowerCase() === 'input') { // Ensure it's an input element
-        console.log(element);
-    }
-} */
-
     const passingDateInput = document.querySelector('input[placeholder="Date of Passing (yyyy-mm-dd)"]');
     passingDateInput.value = storage.passingDate.split(' ')[0];
     passingDateInput.dispatchEvent(inputEvent);
@@ -137,16 +129,10 @@ for (let i = 0; i < form.elements.length; i++) {
     let genderQuery;
     if (storage.sex === 'Male') {
         genderQuery = 'Male';
-        // const maleButton = genderInput.nextElementSibling.firstChild;
-        // maleButton.click();
     } else if (storage.sex === 'Female') {
         genderQuery = 'Female';
-        // const femaleButton = genderInput.nextElementSibling.lastChild;
-        // femaleButton.click();
     } else {
         genderQuery = 'Unspecified';
-        // const femaleButton = genderInput.nextElementSibling.lastChild;
-        // femaleButton.click();
     }
     const genderButton = [...document.querySelectorAll('button')].find(button => button.textContent === genderQuery);
     console.log(genderButton);
@@ -167,9 +153,8 @@ for (let i = 0; i < form.elements.length; i++) {
     form['emailAddress'].dispatchEvent(inputEvent);
     form['phoneNumber'].value = storage.clientPhone;
     form['phoneNumber'].dispatchEvent(inputEvent);
-
-    // form["address2"].value = storage.clientAddress2;
-    // form["address2"].dispatchEvent(inputEvent);
+    form['address2'].value = storage.clientApartmentNumber;
+    form['address2'].dispatchEvent(inputEvent);
 
     // Species
     const speciesInput = document.getElementById('typeahead-basic');
@@ -182,7 +167,6 @@ for (let i = 0; i < form.elements.length; i++) {
     speciesDropdownButton.click();
     await waitForCondition(() => !speciesDropdown.isConnected);
 
-    // const addressInput = document.forms[0]["address1"]
     const addressInput = form['address1'];
     console.log(addressInput);
     addressInput.value = `${storage.clientAddress1}, ${storage.clientAddress2}`;

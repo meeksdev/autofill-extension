@@ -41,9 +41,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 .then(storeJotformData)
                 .then(createGmailDraft)
                 .then(deleteOldDocs)
-                // .then(createInvoice)
-                // .then(createLetter)
-                // .then(createEnvelope)
+                .then(createInvoice)
+                .then(createLetter)
+                .then(createEnvelope)
                 .then(data => {
                     console.log('All tasks completed successfully with data:', data);
                     sendResponse({ success: true, data: data });
@@ -162,7 +162,7 @@ function createGmailDraft(data) {
     <p style="margin: 0";>Patient: ${data.nameOf}</p>
     <p style="margin: 0";>Date of Scheduled Appointment: ${formattedDate}</p>
     <p style="margin: 0";>Client Name: ${data.clientName['first']} ${data.clientName['last']}</p>
-    <p style="margin: 0";>Address: ${data.address['addr_line1']}</p>
+    <p style="margin: 0";>Address: ${data.address['addr_line1']} ${data.address['addr_line2']}</p>
     <p style="margin: 0";>         ${data.cityStatePostal}</p>
     <p style="margin: 0";>Phone Number: ${data.phoneNumber['full']}</p>
 
@@ -382,6 +382,8 @@ async function storeJotformData(data) {
     if (!data.additionalNosePrint) data.additionalNosePrint = 0;
     if (!data.additonalPawPrint) data.additonalPawPrint = 0;
 
+    let clientApartmentNumber = data.address['addr_line2'] || '';
+
     return new Promise((resolve, reject) => {
         chrome.storage.local.set(
             {
@@ -397,8 +399,9 @@ async function storeJotformData(data) {
                 clientLastName: data.clientName['last'],
                 clientEmail: data.email,
                 clientPhone: data.phoneNumber['full'],
-                clientAddress1: data.address['addr_line1'],
+                clientAddress1: `${data.address['addr_line1']} ${data.address['addr_line2']}`,
                 clientAddress2: `${data.address['city']}, ${data.address['state']} ${data.address['postal']}`,
+                clientApartmentNumber: clientApartmentNumber,
                 urnChoice: data.urnChoices,
                 urnLine1: urnLine1,
                 urnLine2: urnLine2,
@@ -536,7 +539,7 @@ function createInvoice(data) {
         createDocFromTemplate(data.invoiceTemplateId, `(Invoice) ${data.nameOf}\'s Passing ${data.submissionDate}`, {
             Date: currentDate,
             ClientName: `${data.clientName['first']} ${data.clientName['last']}`,
-            Address: `${data.address['addr_line1']}
+            Address: `${data.address['addr_line1']} ${data.address['addr_line2']}
                     ${data.cityStatePostal}`,
             PhoneNumber: data.phoneNumber['full'],
             PetName: data.nameOf,
@@ -854,8 +857,8 @@ function createEnvelope(data) {
         createDocFromTemplate(data.envelopeTemplateId, `(Envelope) ${data.nameOf}'s Passing ${data.submissionDate}`, {
             familyName: data.clientName['last'],
             AddressLine1: data.address['addr_line1'],
-            AddressLine2: data.cityStatePostal,
-            AddressLine3: '',
+            AddressLine2: data.address['addr_line2'] || data.cityStatePostal,
+            AddressLine3: data.address['addr_line2'] ? data.cityStatePostal : '',
         })
             .then(newDocId => {
                 // If the document creation is successful, log and resolve
