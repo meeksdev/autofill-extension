@@ -30,7 +30,7 @@ const memorialKeys = [
     'additionalPawPrint',
     'cremationType',
 ];
-const reviewKeys = ['collectionLocation', 'petHospital'];
+const reviewKeys = ['cremationType', 'pawOrNosePrint', 'collectionLocation', 'petHospital'];
 
 chrome.runtime.onMessage.addListener(async (message, sender, response) => {
     const { type, action } = message;
@@ -456,7 +456,7 @@ async function fillReviewForm(storage) {
     console.log(storage.collectionLocation);
 
     let extraElements = [];
-    if (storage.collectionLocation === 'Office') {
+    if (storage.collectionLocation === 'Office' || (storage.cremationType === 'Memorial' && storage.pawOrNosePrint !== 'No thank you')) {
         // Do Nothing
         const unorderedList = document.createElement('ul');
         const listElement = document.createElement('li');
