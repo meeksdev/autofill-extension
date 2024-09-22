@@ -133,14 +133,24 @@ for (let i = 0; i < form.elements.length; i++) {
     lbsButton.click();
 
     // Gender or Sex
-    const genderInput = document.querySelector('input[formcontrolname="gender"]');
+    // const genderInput = document.querySelector('input[formcontrolname="gender"]');
+    let genderQuery;
     if (storage.sex === 'Male') {
-        const maleButton = genderInput.nextElementSibling.firstChild;
-        maleButton.click();
+        genderQuery = 'Male';
+        // const maleButton = genderInput.nextElementSibling.firstChild;
+        // maleButton.click();
     } else if (storage.sex === 'Female') {
-        const femaleButton = genderInput.nextElementSibling.lastChild;
-        femaleButton.click();
+        genderQuery = 'Female';
+        // const femaleButton = genderInput.nextElementSibling.lastChild;
+        // femaleButton.click();
+    } else {
+        genderQuery = 'Unspecified';
+        // const femaleButton = genderInput.nextElementSibling.lastChild;
+        // femaleButton.click();
     }
+    const genderButton = [...document.querySelectorAll('button')].find(button => button.textContent === genderQuery);
+    console.log(genderButton);
+    genderButton.click();
 
     // Other form fields
     form['name'].value = storage.petName;
