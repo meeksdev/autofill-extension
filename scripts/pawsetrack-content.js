@@ -238,23 +238,21 @@ async function selectUrn(storage, tabId) {
     urnButton.click();
 
     const urnWindow = await waitForCondition(() => document.querySelector('div[class=modal-content]'));
-    console.log(urnWindow);
 
     if (storage.urnChoice.includes('Decorative Metal Standard Urn')) {
-        const personalizeItemButton = await waitForCondition(() => {
-            const personalizeItemForm = [...urnWindow.querySelectorAll('span')]
-                .find(span => span.textContent.includes('Personalize this item?'))
-                ?.closest('form'); // Get the closest form that contains the span
-            const personalizeItemButton = [...personalizeItemForm.querySelectorAll('button')].find(button => button.textContent.includes('Yes'));
-            return personalizeItemButton;
-        });
-        console.log(personalizeItemButton);
-        personalizeItemButton.click();
+        if (storage.urnLine1 || storage.urnLine2) {
+            const personalizeItemButton = await waitForCondition(() => {
+                const personalizeItemForm = [...urnWindow.querySelectorAll('span')]
+                    .find(span => span.textContent.includes('Personalize this item?'))
+                    ?.closest('form'); // Get the closest form that contains the span
+                const personalizeItemButton = [...personalizeItemForm.querySelectorAll('button')].find(button => button.textContent.includes('Yes'));
+                return personalizeItemButton;
+            });
+            personalizeItemButton.click();
+        }
     }
 
-    console.log('Before');
     const query = storage.isUrnEngraved ? 'div.product-offering-item.my-3' : 'div.product-offering-item.my-3.active';
-
     await waitForCondition(() => urnWindow.querySelector(query), 100, 250)
         .then(engravedStyleButton => engravedStyleButton.click())
         .catch(error => console.warn('Error:', error));

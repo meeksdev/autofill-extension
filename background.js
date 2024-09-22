@@ -372,11 +372,7 @@ async function storeJotformData(data) {
     console.log('Step 3: Store Jotform Data', data);
 
     let isUrnEngraved = false;
-    let urnLine1 = '',
-        urnLine2 = '',
-        urnLine3 = '',
-        urnLine4 = '';
-
+    let urnLine1, urnLine2, urnLine3, urnLine4;
     if (data.engravingLine1 || data.engravingLine2 || data.engravingLine3 || data.engravingLine4) {
         isUrnEngraved = true;
         urnLine1 = data.engravingLine1;
@@ -390,6 +386,10 @@ async function storeJotformData(data) {
         urnLine1 = data.namePlateLine1;
         urnLine2 = data.namePlateLine2;
     }
+    if (!urnLine1) urnLine1 = '';
+    if (!urnLine2) urnLine2 = '';
+    if (!urnLine3) urnLine3 = '';
+    if (!urnLine4) urnLine4 = '';
 
     if (!data.clayNosePrint) data.clayNosePrint = 0;
     if (!data.clayPawPrint) data.clayPawPrint = 0;
