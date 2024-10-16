@@ -247,7 +247,7 @@ function sendGmailDraft(to, subject, body, callback) {
 }
 
 async function handleData(data) {
-    console.log('Step 1: Handle Data');
+    console.log('Step 1: Handle Raw Data', data);
     let submissionData = extractFormData(data.content.answers);
     submissionData = await gatherAdditionalInformation(submissionData); // Await this as it's asynchronous
     submissionData.submissionDate = data.content.created_at;
@@ -261,7 +261,18 @@ function extractFormData(data) {
     Object.values(data).forEach(field => {
         if (field.name && field.answer) {
             if (typeof field.answer === 'string') {
-                formData[field.name] = field.answer.trim();
+                if (field.answer.includes('\r\n')) {
+                    const parsedAnswer = {};
+                    field.answer.split('\r\n').forEach(line => {
+                        const [key, value] = line.split(':').map(item => item.trim());
+                        if (key && value) {
+                            parsedAnswer[key] = value;
+                        }
+                    });
+                    formData[field.name] = parsedAnswer;
+                } else {
+                    formData[field.name] = field.answer.trim();
+                }
             } else if (typeof field.answer === 'object' && field.answer !== null) {
                 Object.entries(field.answer).forEach(([key, value]) => {
                     field.answer[key] = value.trim();
@@ -273,6 +284,17 @@ function extractFormData(data) {
         }
     });
 
+    // Check if the old address or new address is being used and handle it accordingly
+    if (formData.addressAuto) {
+        if (!formData.address) formData.address = {};
+        formData.address['addr_line1'] = `${formData.addressAuto['Building number']} ${formData.addressAuto['Street name']}`;
+        formData.address['addr_line2'] = `#${formData.aptNumber}` || '';
+        formData.address['city'] = formData.addressAuto['City'];
+        formData.address['state'] = formData.addressAuto['State'];
+        formData.address['postal'] = formData.addressAuto['Postal code'];
+    }
+
+    console.log('%cForm Data Extraction Successful:', 'color: green', formData);
     return formData;
 }
 
@@ -302,6 +324,7 @@ async function gatherAdditionalInformation(data) {
 
     console.log(data.address);
     data.cityStatePostal = `${address['city']}, ${address['state']} ${address['postal']}`;
+    console.log(data.cityStatePostal);
 
     data.cremationType = data.cremationType.includes('PRIVATE cremation')
         ? 'Private'
@@ -388,19 +411,19 @@ async function storeJotformData(data) {
         chrome.storage.local.set(
             {
                 cremationType: data.cremationType,
-                petName: data.nameOf,
+                petName: capitalizeWords(data.nameOf),
                 species: data.species,
                 breed: data.breed,
                 weight: data.approximateWeight,
                 passingDate: data.dateOf6['datetime'],
                 sex: data.sex,
                 age: data.age,
-                clientFirstName: data.clientName['first'],
-                clientLastName: data.clientName['last'],
+                clientFirstName: capitalizeWords(data.clientName['first']),
+                clientLastName: capitalizeWords(data.clientName['last']),
                 clientEmail: data.email,
                 clientPhone: data.phoneNumber['full'],
-                clientAddress1: `${data.address['addr_line1']} ${data.address['addr_line2']}`,
-                clientAddress2: `${data.address['city']}, ${data.address['state']} ${data.address['postal']}`,
+                clientAddress1: `${capitalizeWords(data.address['addr_line1'])} ${data.address['addr_line2']}`,
+                clientAddress2: `${capitalizeWords(data.address['city'])}, ${data.address['state'].toUpperCase()} ${data.address['postal']}`,
                 clientApartmentNumber: clientApartmentNumber,
                 urnChoice: data.urnChoices,
                 urnLine1: urnLine1,
@@ -414,7 +437,7 @@ async function storeJotformData(data) {
                 additionalBoxedFurClipping: data.additionalBoxedFurClipping,
                 additionalFurClipping: data.additionalFurClipping,
                 additionalNosePrint: data.additionalNosePrint,
-                additonalPawPrint: data.additonalPawPrint,
+                additionalPawPrint: data.additionalPawPrint,
                 collectionLocation: data.collectionLocation,
                 petHospital: data.petHospital,
             },
@@ -523,7 +546,7 @@ function createInvoice(data) {
         console.log('Made it 1');
 
         const subtotal = products.reduce((total, product) => total + (parseFloat(product.subtotal) || 0), 0);
-        const paid = 0;
+        const paid = subtotal;
         const total = subtotal - paid;
 
         //format subtotals as currency
@@ -935,4 +958,11 @@ function deleteDocument(docId) {
                 console.error('Error deleting document:', error);
             });
     });
+}
+
+function capitalizeWords(str) {
+    return str
+        .split(' ') // Split the string into an array of words
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize the first letter of each word
+        .join(' '); // Join the words back into a string
 }

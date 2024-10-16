@@ -7,13 +7,14 @@ const outputDir = 'dist'; // Directory where minified files will be saved
 
 // List of files and directories to exclude
 const excludeFiles = [
+    '.gitignore',
     '.prettierrc',
     'package.json',
     'package-lock.json',
     'README.md',
     'LICENSE.txt',
     'terser.config.js',
-    'manifest.json',
+    // 'manifest.json',
     // Add other excluded files here
 ];
 
