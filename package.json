@@ -3,6 +3,7 @@
         "terser": "^5.32.0"
     },
     "scripts": {
-        "minify": "node terser.config.js"
+        "build:dev": "bash -c 'NODE_ENV=development node terser.config.js'",
+        "build:prod": "bash -c 'NODE_ENV=production node terser.config.js'"
     }
 }
