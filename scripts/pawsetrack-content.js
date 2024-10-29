@@ -1,7 +1,7 @@
 // Prepare an event to notify the framework of the change
 const inputEvent = new Event('input', { bubbles: true });
 
-const pageCompletionKeys = [];
+// const pageCompletionKeys = [];
 
 const petAndOwnerKeys = [
     'petName',
@@ -33,7 +33,14 @@ const memorialKeys = [
 ];
 const reviewKeys = ['cremationType', 'pawOrNosePrint', 'collectionLocation', 'petHospital'];
 
-chrome.runtime.onMessage.addListener(async (message, sender, response) => {
+/**
+ * Listens for messages from the Chrome runtime and performs actions based on the message type and action.
+ * @param {Object} message - The message object received from the Chrome runtime.
+ * @param {string} message.type - The type of the message.
+ * @param {string} message.action - The action to be performed.
+ * @param {number} message.tabId - The ID of the tab where the action should be performed.
+ */
+chrome.runtime.onMessage.addListener(async message => {
     const { type, action } = message;
     console.log(message);
 
@@ -69,6 +76,11 @@ chrome.runtime.onMessage.addListener(async (message, sender, response) => {
     }
 });
 
+/**
+ * Retrieves stored session data from Chrome's local storage.
+ * @param {string[]} keys - The keys to retrieve from storage.
+ * @param {function(Object): void} callback - The callback function to execute with the retrieved data.
+ */
 function getStoredSessionData(keys, callback) {
     chrome.storage.local.get(keys, function (result) {
         keys.forEach(key => {
@@ -82,6 +94,11 @@ function getStoredSessionData(keys, callback) {
 }
 
 /*** DASHBOARD PAGE ***/
+
+/**
+ * Initiates the process to start a new order on the dashboard page.
+ * @param {number} tabId - The ID of the tab where the new order should be started.
+ */
 async function startNewOrder(tabId) {
     console.log('startNewOrder');
     const newOrderButton = await waitForCondition(() => [...document.querySelectorAll('button')].find(button => button.textContent.includes('New Order')));
@@ -92,6 +109,12 @@ async function startNewOrder(tabId) {
 }
 
 /*** START ORDER PAGE ***/
+
+/**
+ * Selects the cremation type on the start order page.
+ * @param {string} cremationType - The type of cremation to select ('Private' or 'Memorial').
+ * @param {number} tabId - The ID of the tab where the cremation type should be selected.
+ */
 async function selectCremationType(cremationType, tabId) {
     console.log(cremationType);
 
@@ -113,6 +136,27 @@ async function selectCremationType(cremationType, tabId) {
 }
 
 /*** PET AND OWNER PAGE ***/
+
+/**
+ * Fills out the pet and owner form with the provided storage data.
+ * @param {HTMLFormElement} form - The form element to be filled.
+ * @param {Object} storage - The storage object containing the data to fill the form.
+ * @param {string} storage.passingDate - The date of passing of the pet.
+ * @param {string} storage.sex - The sex of the pet ('Male', 'Female', or 'Unspecified').
+ * @param {string} storage.petName - The name of the pet.
+ * @param {string} storage.breed - The breed of the pet.
+ * @param {string} storage.weight - The weight of the pet.
+ * @param {string} storage.clientFirstName - The first name of the client.
+ * @param {string} storage.clientLastName - The last name of the client.
+ * @param {string} storage.clientEmail - The email address of the client.
+ * @param {string} storage.clientPhone - The phone number of the client.
+ * @param {string} storage.clientApartmentNumber - The apartment number of the client.
+ * @param {string} storage.species - The species of the pet.
+ * @param {string} storage.clientAddress1 - The first line of the client's address.
+ * @param {string} storage.clientAddress2 - The second line of the client's address.
+ * @param {number} tabId - The ID of the tab where the form is being filled.
+ * @returns {Promise<void>} A promise that resolves when the form is filled and the next page is navigated to.
+ */
 async function fillPetAndOwnerForm(form, storage, tabId) {
     const passingDateInput = document.querySelector('input[placeholder="Date of Passing (yyyy-mm-dd)"]');
     passingDateInput.value = storage.passingDate.split(' ')[0];
@@ -182,12 +226,19 @@ async function fillPetAndOwnerForm(form, storage, tabId) {
     await waitForCondition(() => nextPageButton.disabled === false);
     nextPageButton.click();
 
-    // createModalWindow();
-
     chrome.runtime.sendMessage({ action: 'fillBundlesForm', tabId: tabId });
 }
 
 /*** BUNDLED PRODUCTS PAGE ***/
+
+/**
+ * Fills out the bundles form based on the provided storage data.
+ * @param {Object} storage - The storage object containing the data to fill the form.
+ * @param {string} storage.pawOrNosePrint - The type of print to select ('Nose print', 'Paw print', or 'No thank you').
+ * @param {string} storage.cremationType - The type of cremation ('Private' or 'Memorial').
+ * @param {number} tabId - The ID of the tab where the form is being filled.
+ * @returns {Promise<void>} A promise that resolves when the form is filled and the next page is navigated to.
+ */
 async function fillBundlesForm(storage, tabId) {
     console.log(storage.pawOrNosePrint);
 
@@ -213,6 +264,17 @@ async function fillBundlesForm(storage, tabId) {
 }
 
 /*** URN PAGE ***/
+
+/**
+ * Selects the urn based on the provided storage data and navigates to the next page.
+ * @param {Object} storage - The storage object containing the data to fill the form.
+ * @param {string} storage.urnChoice - The choice of urn to select.
+ * @param {boolean} storage.isUrnEngraved - Indicates if the urn is engraved.
+ * @param {string} [storage.urnLine1] - The first line of text for urn personalization (optional).
+ * @param {string} [storage.urnLine2] - The second line of text for urn personalization (optional).
+ * @param {number} tabId - The ID of the tab where the form is being filled.
+ * @returns {Promise<void>} A promise that resolves when the urn is selected and the next page is navigated to.
+ */
 async function selectUrn(storage, tabId) {
     console.log('selectUrn');
 
@@ -261,6 +323,17 @@ async function selectUrn(storage, tabId) {
     chrome.runtime.sendMessage({ action: 'fillMemorialForm', tabId: tabId });
 }
 
+/**
+ * Handles the text input for urn personalization based on the provided storage data.
+ * @param {Object} storage - The storage object containing the data to fill the form.
+ * @param {string} [storage.urnLine1] - The first line of text for urn personalization (optional).
+ * @param {string} [storage.urnLine2] - The second line of text for urn personalization (optional).
+ * @param {string} [storage.urnLine3] - The third line of text for urn personalization (optional).
+ * @param {string} [storage.urnLine4] - The fourth line of text for urn personalization (optional).
+ * @param {boolean} storage.isUrnEngraved - Indicates if the urn is engraved.
+ * @param {HTMLElement} urnWindow - The window element containing the urn form.
+ * @returns {Promise<void>} A promise that resolves when the text inputs are filled.
+ */
 async function handleUrnText(storage, urnWindow) {
     console.log(storage.urnLine1, storage.urnLine2, storage.urnLine3, storage.urnLine4);
 
@@ -295,15 +368,21 @@ async function handleUrnText(storage, urnWindow) {
 }
 
 /*** MEMORIAL PRODUCTS PAGE ***/
-async function fillMemorialForm(storage, tabId) {
-    // COMMUNAL CREMATION FIX
-    /* if (storage.cremationType === "Memorial" && storage.pawOrNosePrint === "Paw print") {
-        storage.additionalPawPrint = storage.additionalPawPrint ? storage.additionalPawPrint++ : 1;
-    }
-    console.log("cremationType:", storage.cremationType);
-    console.log("pawOrNosePrint:", storage.pawOrNosePrint);
-    console.log("additionalPawPrint:", storage.additionalPawPrint); */
 
+/**
+ * Fills out the memorial form based on the provided storage data.
+ * @param {Object} storage - The storage object containing the data to fill the form.
+ * @param {string} storage.pawOrNosePrint - The type of print to select ('Nose print', 'Paw print', or 'No thank you').
+ * @param {number} storage.clayPawPrint - The number of clay paw prints to add.
+ * @param {number} storage.clayNosePrint - The number of clay nose prints to add.
+ * @param {number} storage.additionalBoxedFurClipping - The number of additional boxed fur clippings to add.
+ * @param {number} storage.additionalFurClipping - The number of additional fur clippings to add.
+ * @param {number} storage.additionalNosePrint - The number of additional nose prints to add.
+ * @param {number} storage.additionalPawPrint - The number of additional paw prints to add.
+ * @param {number} tabId - The ID of the tab where the form is being filled.
+ * @returns {Promise<void>} A promise that resolves when the form is filled and the next page is navigated to.
+ */
+async function fillMemorialForm(storage, tabId) {
     // BUNDLED PRODUCTS NOSE PRINT
     if (storage.pawOrNosePrint === 'Nose print') {
         storage.additionalNosePrint = storage.additionalNosePrint ? storage.additionalNosePrint++ : 1;
@@ -433,6 +512,16 @@ async function fillMemorialForm(storage, tabId) {
 }
 
 /*** REVIEW SUMMARY PAGE ***/
+
+/**
+ * Fills out the review form based on the provided storage data.
+ * @param {Object} storage - The storage object containing the data to fill the form.
+ * @param {string} storage.collectionLocation - The location where the collection will take place ('Office', 'Pick-up', 'Mailed', or 'Sarena').
+ * @param {string} storage.cremationType - The type of cremation ('Private' or 'Memorial').
+ * @param {string} storage.pawOrNosePrint - The type of print to select ('Nose print', 'Paw print', or 'No thank you').
+ * @param {string} storage.petHospital - The name of the pet hospital.
+ * @returns {Promise<void>} A promise that resolves when the review form is filled.
+ */
 async function fillReviewForm(storage) {
     console.log('fillReviewForm');
     console.log(storage.collectionLocation);
@@ -469,6 +558,10 @@ async function fillReviewForm(storage) {
     else createModalWindow();
 }
 
+/**
+ * Creates and displays a modal window with optional extra elements.
+ * @param {HTMLElement[]} [extraElements=null] - An array of additional HTML elements to be appended to the modal.
+ */
 function createModalWindow(extraElements = null) {
     // Create modal/popup element
     const modal = document.createElement('div');
@@ -518,6 +611,13 @@ function createModalWindow(extraElements = null) {
     });
 }
 
+/**
+ * Waits for a condition to be met within a specified time frame.
+ * @param {function(): boolean} checkCondition - A function that checks the condition to be met.
+ * @param {number} [intervalTime=100] - The interval time in milliseconds to check the condition.
+ * @param {number} [maxWaitTime=60000] - The maximum wait time in milliseconds before rejecting the promise.
+ * @returns {Promise<*>} A promise that resolves with the result of the condition function if met within the max wait time, otherwise rejects.
+ */
 function waitForCondition(checkCondition, intervalTime = 100, maxWaitTime = 60000) {
     return new Promise((resolve, reject) => {
         const startTime = Date.now();
@@ -539,6 +639,11 @@ function waitForCondition(checkCondition, intervalTime = 100, maxWaitTime = 6000
     });
 }
 
+/**
+ * Delays execution for a specified number of milliseconds.
+ * @param {number} ms - The number of milliseconds to delay.
+ * @returns {Promise<void>} A promise that resolves after the specified delay.
+ */
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }

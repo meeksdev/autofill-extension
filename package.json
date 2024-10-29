@@ -1,9 +1,15 @@
 {
     "devDependencies": {
+        "@eslint/js": "^9.13.0",
+        "eslint": "^9.13.0",
+        "eslint-plugin-react": "^7.37.2",
+        "globals": "^15.11.0",
         "terser": "^5.32.0"
     },
     "scripts": {
         "build:dev": "bash -c 'NODE_ENV=development node terser.config.js'",
-        "build:prod": "bash -c 'NODE_ENV=production node terser.config.js'"
+        "build:prod": "bash -c 'NODE_ENV=production node terser.config.js'",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix"
     }
 }

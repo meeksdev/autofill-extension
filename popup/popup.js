@@ -1,3 +1,6 @@
+/**
+ * Initializes the popup by setting up event listeners and loading stored data.
+ */
 document.addEventListener('DOMContentLoaded', function () {
     const saveButton = document.getElementById('saveButton');
     const jotformTokenInput = document.getElementById('jotformToken');
@@ -18,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const nosePrintPriceInput = document.getElementById('nosePrintPrice');
     const statusMessage = document.getElementById('statusMessage');
 
+    // Load stored data from Chrome's local storage and populate the input fields
     chrome.storage.local.get(
         [
             'jotformToken',
@@ -74,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     );
 
+    // Save the input data to Chrome's local storage when the save button is clicked
     saveButton.addEventListener('click', function () {
         const jotformToken = jotformTokenInput.value.trim();
         const jotformFormId = jotformFormIdInput.value.trim();

@@ -1,4 +1,10 @@
-chrome.runtime.onMessage.addListener((message, sender, response) => {
+/**
+ * Listens for messages from the Chrome runtime and performs actions based on the message type and action.
+ * @param {Object} message - The message object received from the Chrome runtime.
+ * @param {string} message.action - The action to be performed.
+ * @param {string} message.type - The type of the message.
+ */
+chrome.runtime.onMessage.addListener(message => {
     if (message.action === 'createFormButton') {
         const { type } = message;
         if (type === 'NEW') {
@@ -7,6 +13,10 @@ chrome.runtime.onMessage.addListener((message, sender, response) => {
     }
 });
 
+/**
+ * Creates and displays a modal window with buttons for filling forms and emails.
+ * If a modal already exists, it will be displayed and reset.
+ */
 function createFormButtonModal() {
     // Check if modal already exists
     const existingAutofillModal = document.getElementById('AutofillModal');
@@ -178,14 +188,14 @@ function createFormButtonModal() {
     });
 }
 
+/**
+ * Sends a message to the background script to open and print a Google Doc.
+ * @param {string} docId - The ID of the Google Doc to be printed.
+ */
 function printGoogleDoc(docId) {
     chrome.runtime.sendMessage({ action: 'openAndPrintDoc', docId: docId });
 }
 
-function printCurrentWindow() {
+/* function printCurrentWindow() {
     window.print();
-}
-
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+} */

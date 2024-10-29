@@ -1,3 +1,11 @@
+/**
+ * Listens for updates to any tab and performs actions based on the tab's URL and status.
+ * @param {number} tabId - The ID of the tab that was updated.
+ * @param {Object} changeInfo - An object containing properties about how the tab was changed.
+ * @param {string} changeInfo.status - The status of the tab (e.g., 'loading', 'complete').
+ * @param {Object} tab - The details of the tab that was updated.
+ * @param {string} tab.url - The URL of the tab that was updated.
+ */
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     // Check if the page is fully loaded
     chrome.storage.local.get(['jotformFormId'], function (result) {
@@ -21,6 +29,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     });
 });
 
+/**
+ * Listens for messages from other parts of the extension and performs actions based on the message action.
+ * @param {Object} message - The message object received.
+ * @param {string} message.action - The action to be performed.
+ * @param {string} [message.submissionId] - The ID of the JotForm submission (if applicable).
+ * @param {Object} sender - The sender of the message.
+ * @param {function} sendResponse - The function to call to send a response.
+ */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'fillDocsAndEmail') {
         const submissionId = message.submissionId;
@@ -154,6 +170,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 });
 
+/**
+ * Creates a Gmail draft using the provided data and sends it using Gmail API.
+ * @param {Object} data - The data used to create the Gmail draft.
+ * @param {string} data.dateOf6.datetime - The datetime of the scheduled appointment.
+ * @param {string} data.nameOf - The name of the patient/pet.
+ * @param {Object} data.clientName - The client's name.
+ * @param {string} data.clientName.first - The client's first name.
+ * @param {string} data.clientName.last - The client's last name.
+ * @param {Object} data.address - The address of the client.
+ * @param {string} data.address.addr_line1 - The first line of the client's address.
+ * @param {string} data.address.addr_line2 - The second line of the client's address (optional).
+ * @param {string} data.cityStatePostal - The city, state, and postal code of the client.
+ * @param {Object} data.phoneNumber - The client's phone number.
+ * @param {string} data.phoneNumber.full - The full phone number.
+ * @returns {Object} The input data object (unchanged).
+ */
 function createGmailDraft(data) {
     console.log('Creating and sending Gmail draft with data:', data);
     const formattedDate = new Date(data.dateOf6['datetime']).toLocaleString();
@@ -197,20 +229,24 @@ function createGmailDraft(data) {
         />
     </div>
 `;
-    let draftId;
     sendGmailDraft('', `Notification of Euthanasia`, emailBody, function (error, response) {
         if (error) {
             console.error('Failed to create Gmail draft:', error.message);
             return;
         }
         console.log('%cGmail draft created successfully:', 'color: green', response);
-        draftId = response.id;
     });
 
     return data;
 }
 
-//HTML email
+/**
+ * Sends a Gmail draft using Gmail API.
+ * @param {string} to - The recipient email address.
+ * @param {string} subject - The subject of the email.
+ * @param {string} body - The body of the email, in HTML format.
+ * @param {Function} callback - The callback function to handle success or error.
+ */
 function sendGmailDraft(to, subject, body, callback) {
     authenticateGoogle(function (token) {
         if (!token) {
@@ -246,6 +282,14 @@ function sendGmailDraft(to, subject, body, callback) {
     });
 }
 
+/**
+ * Processes the raw data, extracts relevant form data, gathers additional information,
+ * and adds submission date to the data.
+ * @param {Object} data - The raw data to be processed.
+ * @param {Object} data.content.answers - The answers from the form submission.
+ * @param {string} data.content.created_at - The timestamp of the form submission.
+ * @returns {Promise<Object>} A promise that resolves to the processed submission data.
+ */
 async function handleData(data) {
     console.log('Step 1: Handle Raw Data', data);
     let submissionData = extractFormData(data.content.answers);
@@ -255,6 +299,11 @@ async function handleData(data) {
     return submissionData;
 }
 
+/**
+ * Extracts form data from raw submission answers and processes address information.
+ * @param {Object} data - The raw form submission answers.
+ * @returns {Object} The processed form data, including address and other fields.
+ */
 function extractFormData(data) {
     const formData = {};
 
@@ -288,7 +337,7 @@ function extractFormData(data) {
     if (formData.addressAuto) {
         if (!formData.address) formData.address = {};
         formData.address['addr_line1'] = `${formData.addressAuto['Building number']} ${formData.addressAuto['Street name']}`;
-        formData.address['addr_line2'] = `#${formData.aptNumber}` || '';
+        formData.address['addr_line2'] = formData.aptNumber ? `#${formData.aptNumber}` : '';
         formData.address['city'] = formData.addressAuto['City'];
         formData.address['state'] = formData.addressAuto['State'];
         formData.address['postal'] = formData.addressAuto['Postal code'];
@@ -298,6 +347,17 @@ function extractFormData(data) {
     return formData;
 }
 
+/**
+ * Gathers additional information from the provided data object.
+ * This function processes data about a pet (species, sex, address) and adds
+ * additional context to it (such as "cuteSpecies" and pronouns based on the pet's sex).
+ * It also maps cremation types and collection locations to human-readable formats.
+ * Finally, it retrieves specific keys from Chrome's local storage and merges them
+ * into the data object before resolving the promise.
+ *
+ * @param {Object} data - The data object containing pet and client details.
+ * @returns {Promise<Object>} - A promise that resolves to the updated data object with additional information.
+ */
 async function gatherAdditionalInformation(data) {
     console.log('Step 2: Gather Additional Information');
 
@@ -375,6 +435,14 @@ async function gatherAdditionalInformation(data) {
     });
 }
 
+/**
+ * Stores form data from Jotform into Chrome's local storage.
+ * It processes data like engraving information, additional products (e.g., fur clippings),
+ * client and pet details, and urn engraving, then saves this data in local storage.
+ *
+ * @param {Object} data - The data object containing Jotform responses.
+ * @returns {Promise<Object>} - A promise that resolves once the data is successfully stored.
+ */
 async function storeJotformData(data) {
     console.log('Step 3: Store Jotform Data', data);
 
@@ -453,6 +521,15 @@ async function storeJotformData(data) {
     });
 }
 
+/**
+ * Creates an invoice using a template based on the gathered data.
+ * It prepares the product details (euthanasia, cremation, additional services),
+ * formats them into a product list, and populates a Google Docs invoice template.
+ * The function creates the document, then saves the new document ID into the data object.
+ *
+ * @param {Object} data - The data object with invoice-relevant details.
+ * @returns {Promise<Object>} - A promise that resolves with the updated data object containing the new invoice document ID.
+ */
 function createInvoice(data) {
     return new Promise((resolve, reject) => {
         console.log('Create Invoice');
@@ -559,7 +636,7 @@ function createInvoice(data) {
             products.push({ name: '', subtotal: '' });
         }
 
-        createDocFromTemplate(data.invoiceTemplateId, `(Invoice) ${data.nameOf}\'s Passing ${data.submissionDate}`, {
+        createDocFromTemplate(data.invoiceTemplateId, `(Invoice) ${data.nameOf}'s Passing ${data.submissionDate}`, {
             Date: currentDate,
             ClientName: `${data.clientName['first']} ${data.clientName['last']}`,
             Address: `${data.address['addr_line1']} ${data.address['addr_line2']}
@@ -607,6 +684,11 @@ function createInvoice(data) {
     });
 }
 
+/**
+ * Formats a given value as currency in USD.
+ * @param {number} value - The value to format as currency.
+ * @returns {string} - The formatted currency string.
+ */
 function formatAsCurrency(value) {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -614,94 +696,13 @@ function formatAsCurrency(value) {
     }).format(value);
 }
 
-/* function createDocFromTemplate(templateDocId, title, replacements, callback) {
-    copyTemplate(templateDocId, title, function (newDocId) {
-        replaceTextInDocument(newDocId, replacements, function (response) {
-            callback(newDocId); // Return the new document's ID
-        });
-    });
-}
-
-function copyTemplate(templateDocId, title, callback) {
-    authenticateGoogle(function (token) {
-        const url = `https://www.googleapis.com/drive/v3/files/${templateDocId}/copy`;
-        const data = { name: title };
-
-        makeApiCall(url, "POST", data, token, function (error, response) {
-            if (error) {
-                console.error("Error copying template:", error);
-                return;
-            }
-            console.log("%cDocument copied successfully:", "color: green", response);
-            callback(response.id); // Get the new document's ID
-        });
-    });
-}
-
-function authenticateGoogle(callback) {
-    chrome.identity.getAuthToken({ interactive: true }, function (token) {
-        if (chrome.runtime.lastError || !token) {
-            console.error("Authentication error:", chrome.runtime.lastError);
-            return callback(new Error("Authentication failed."));
-        }
-        callback(token);
-    });
-}
-
-function makeApiCall(url, method, data, token, callback) {
-    console.log("Making API call on data:", data);
-    fetch(url, {
-        method: method,
-        headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-        },
-        body: data ? JSON.stringify(data) : null,
-    })
-        .then((response) => {
-            if (!response.ok) {
-                return response.json().then((errData) => {
-                    throw new Error(`API call failed with status ${response.status}: ${errData.error.message}`);
-                });
-            }
-            return response.json();
-        })
-        .then((data) => callback(null, data))
-        .catch((error) => {
-            console.error("API call error:", error);
-            callback(error);
-        });
-}
-
-function replaceTextInDocument(docId, replacements, callback) {
-    authenticateGoogle(function (token) {
-        const url = `https://docs.googleapis.com/v1/documents/${docId}:batchUpdate`;
-
-        console.log(replacements);
-
-        const requests = Object.keys(replacements).map((key) => ({
-            replaceAllText: {
-                containsText: {
-                    text: `{{${key}}}`,
-                    matchCase: true,
-                },
-                replaceText: replacements[key],
-            },
-        }));
-
-        const data = { requests: requests };
-
-        makeApiCall(url, "POST", data, token, function (error, response) {
-            if (error) {
-                console.error("Error replacing text:", error);
-                return;
-            }
-            console.log("%cText replaced:", "color: green", response);
-            callback(response);
-        });
-    });
-} */
-
+/**
+ * Creates a new document from a template, replacing placeholders with actual data.
+ * @param {string} templateDocId - The ID of the template document to copy.
+ * @param {string} title - The title of the new document.
+ * @param {Object} replacements - An object containing key-value pairs for placeholder replacements.
+ * @returns {Promise<string>} - A promise that resolves with the new document's ID.
+ */
 function createDocFromTemplate(templateDocId, title, replacements) {
     return new Promise((resolve, reject) => {
         console.log('Starting to copy template...');
@@ -729,7 +730,7 @@ function createDocFromTemplate(templateDocId, title, replacements) {
             });
 
             console.log('Starting text replacement...');
-            replaceTextInDocument(newDocId, replacements, function (error, response) {
+            replaceTextInDocument(newDocId, replacements, function (error) {
                 if (error) {
                     console.error('Error replacing text:', error.message);
                     return reject(new Error('Error replacing text: ' + error.message));
@@ -742,6 +743,12 @@ function createDocFromTemplate(templateDocId, title, replacements) {
     });
 }
 
+/**
+ * Copies a Google Docs template and creates a new document.
+ * @param {string} templateDocId - The ID of the template document.
+ * @param {string} title - The title of the new document.
+ * @param {function} callback - The callback function to handle the response or error.
+ */
 function copyTemplate(templateDocId, title, callback) {
     console.log('Copying template with ID:', templateDocId, 'and Title:', title);
 
@@ -761,6 +768,12 @@ function copyTemplate(templateDocId, title, callback) {
     });
 }
 
+/**
+ * Replaces placeholders in a Google Doc with actual text.
+ * @param {string} docId - The ID of the document to modify.
+ * @param {Object} replacements - An object containing key-value pairs for placeholder replacements.
+ * @param {function} callback - The callback function to handle the response or error.
+ */
 function replaceTextInDocument(docId, replacements, callback) {
     console.log('Replacing text in document with ID:', docId);
 
@@ -791,6 +804,10 @@ function replaceTextInDocument(docId, replacements, callback) {
     });
 }
 
+/**
+ * Authenticates the user with Google to obtain an OAuth token.
+ * @param {function} callback - The callback function to receive the token or handle errors.
+ */
 function authenticateGoogle(callback) {
     console.log('Starting Google authentication...');
 
@@ -805,6 +822,14 @@ function authenticateGoogle(callback) {
     });
 }
 
+/**
+ * Makes an authenticated API call to Google services.
+ * @param {string} url - The URL of the API endpoint.
+ * @param {string} method - The HTTP method (GET, POST, etc.).
+ * @param {Object} data - The request payload.
+ * @param {string} token - The OAuth token for authorization.
+ * @param {function} callback - The callback function to handle the response or error.
+ */
 function makeApiCall(url, method, data, token, callback) {
     console.log('Making API call to:', url, 'with data:', data);
 
@@ -835,6 +860,11 @@ function makeApiCall(url, method, data, token, callback) {
         });
 }
 
+/**
+ * Creates a letter document based on provided data.
+ * @param {Object} data - The data object containing template ID, client information, and other details.
+ * @returns {Promise<Object>} - A promise that resolves with the updated data object containing the new document ID.
+ */
 async function createLetter(data) {
     console.log('Starting createLetter function');
 
@@ -869,6 +899,11 @@ async function createLetter(data) {
     }
 }
 
+/**
+ * Creates an envelope document based on provided data.
+ * @param {Object} data - The data object containing template ID, client address information, and other details.
+ * @returns {Promise<Object>} - A promise that resolves with the updated data object containing the new envelope document ID.
+ */
 function createEnvelope(data) {
     return new Promise((resolve, reject) => {
         console.log('Create Envelope');
@@ -897,8 +932,14 @@ function createEnvelope(data) {
     });
 }
 
+/**
+ * Deletes old documents from Google Drive based on their creation date.
+ * Documents older than 2 hours will be deleted.
+ * @param {Object} data - The data object containing document information.
+ * @returns {Promise<void>} - A promise that resolves when the deletion is complete.
+ */
 function deleteOldDocs(data) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
         console.log('Starting deleteOldDocs function');
 
         chrome.storage.local.get(['recentDocs'], function (result) {
@@ -938,6 +979,10 @@ function deleteOldDocs(data) {
     });
 }
 
+/**
+ * Deletes a document from Google Drive by its ID.
+ * @param {string} docId - The ID of the document to delete.
+ */
 function deleteDocument(docId) {
     console.log('deleteDocument');
     chrome.identity.getAuthToken({ interactive: true }, function (token) {
@@ -960,6 +1005,11 @@ function deleteDocument(docId) {
     });
 }
 
+/**
+ * Capitalizes the first letter of each word in a given string.
+ * @param {string} str - The input string to capitalize.
+ * @returns {string} - The input string with each word's first letter capitalized.
+ */
 function capitalizeWords(str) {
     return str
         .split(' ') // Split the string into an array of words

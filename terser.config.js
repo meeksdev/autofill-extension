@@ -21,7 +21,10 @@ const excludeFiles = [
 
 const excludeDirs = ['node_modules', 'dist', '.git']; // List of directories to exclude
 
-// Function to modify manifest.json based on the environment
+/**
+ * Updates the manifest.json file based on the current environment (development or production).
+ * Modifies the manifest version and name, and adjusts the OAuth client ID accordingly.
+ */
 async function updateManifest() {
     try {
         const manifestData = await fs.readFile(manifestPath, 'utf8');
@@ -50,19 +53,33 @@ async function updateManifest() {
     }
 }
 
-// Function to check if a file should be excluded
+/**
+ * Checks if a given file path should be excluded based on the predefined excludeFiles list.
+ * @param {string} filePath - The path of the file to check.
+ * @returns {boolean} - Returns true if the file is in the excludeFiles list, otherwise false.
+ */
 function isExcludedFile(filePath) {
     const fileName = path.basename(filePath);
     return excludeFiles.includes(fileName);
 }
 
-// Function to check if a directory should be excluded
+/**
+ * Checks if a given directory path should be excluded based on the predefined excludeDirs list.
+ * @param {string} dirPath - The path of the directory to check.
+ * @returns {boolean} - Returns true if the directory is in the excludeDirs list, otherwise false.
+ */
 function isExcludedDir(dirPath) {
     const dirName = path.basename(dirPath);
     return excludeDirs.includes(dirName);
 }
 
-// Function to create the corresponding directory in the output directory
+/**
+ * Ensures that the corresponding output directory exists for the specified file path.
+ * Creates the directory structure in the output directory as needed.
+ * @param {string} filePath - The original file path to ensure the output directory for.
+ * @returns {Promise<string>} - Returns a promise that resolves to the output directory path.
+ * @throws Will throw an error if there is an issue creating the directory.
+ */
 async function ensureOutputDir(filePath) {
     const relativePath = path.relative(inputDir, filePath); // Get the relative path from inputDir
     const outputPath = path.join(outputDir, path.dirname(relativePath)); // Append the relative path to outputDir
@@ -74,7 +91,11 @@ async function ensureOutputDir(filePath) {
     }
 }
 
-// Function to minify and move .js files
+/**
+ * Minifies a specified JavaScript file and saves it to the corresponding output directory.
+ * @param {string} filePath - The path of the JavaScript file to minify.
+ * @returns {Promise<void>} - A promise that resolves when the file has been minified and saved.
+ */
 async function minifyFile(filePath) {
     const fileName = path.basename(filePath);
 
@@ -97,7 +118,11 @@ async function minifyFile(filePath) {
     }
 }
 
-// Function to copy non-.js files
+/**
+ * Copies a non-JavaScript file to the corresponding output directory.
+ * @param {string} filePath - The path of the file to copy.
+ * @returns {Promise<void>} - A promise that resolves when the file has been copied.
+ */
 async function copyFile(filePath) {
     const fileName = path.basename(filePath);
 
@@ -112,7 +137,11 @@ async function copyFile(filePath) {
     }
 }
 
-// Function to process the directory, minifying .js files and copying others
+/**
+ * Processes the specified directory by minifying .js files and copying non-.js files.
+ * Recursively processes subdirectories while excluding specified files and directories.
+ * @param {string} dir - The directory to process.
+ */
 async function processDirectory(dir) {
     if (isExcludedDir(dir)) {
         console.log(`Skipping excluded directory: ${dir}`);

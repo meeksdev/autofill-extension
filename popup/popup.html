@@ -1,8 +1,20 @@
+<!-- 
+    This HTML file serves as the user interface for configuring required settings 
+    and invoice settings for the application. It includes input fields for various
+    API keys, template IDs, and pricing information.
+
+    Dependencies: 
+    - popup.css: Styles for the popup UI
+    - popup.js: Script for handling user interactions and saving settings
+-->
+
 <html>
     <head>
+        <!-- Link to the CSS file for styling -->
         <link rel="stylesheet" href="popup.css" />
     </head>
     <body>
+        <!-- Section for required settings such as API keys and template IDs -->
         <section>
             <h1>Required Settings</h1>
             <div class="input-group">
@@ -27,6 +39,8 @@
                 <input type="text" id="invoiceTemplateId" placeholder="Enter Invoice Template ID" />
             </div>
         </section>
+
+        <!-- Section for invoice settings with pricing information -->
         <section>
             <h1>Invoice Settings</h1>
             <div class="input-group">
@@ -77,9 +91,12 @@
             </div>
         </section>
 
+        <!-- Button to save the entered settings -->
         <button id="saveButton">Save</button>
+        <!-- Element to display status messages after saving settings -->
         <p id="statusMessage"></p>
-        <!-- <h1>Print Window</h1> -->
+
+        <!-- JavaScript file for handling interactions -->
         <script src="./popup.js"></script>
     </body>
 </html>

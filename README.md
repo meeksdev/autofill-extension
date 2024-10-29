@@ -16,84 +16,145 @@ This Chrome extension is designed to handle JotForm submissions, create and mana
 1. **Clone the repository:**
 
     ```bash
-    git clone https://github.com/yourusername/your-repository.git
+    git clone https://github.com/meeksdev/autofill-extension.git
     cd your-repository
-    Load the extension into Chrome:
     ```
 
-Open Chrome and go to chrome://extensions/.
-Enable "Developer mode" (toggle switch in the top right).
-Click "Load unpacked" and select the extension directory.
-Configuration
-API Keys and Secrets:
+2. **Load the extension into Chrome:**
+    - Open Chrome and go to `chrome://extensions/`.
+    - Enable "Developer mode" (toggle switch in the top right).
+    - Click "Load unpacked" and select the extension directory.
 
-Set up your API keys and secrets in the background script or your server-side code. Do not hardcode sensitive information directly in the client-side code.
-Manifest File:
+## Configuration
+
+### Manifest File
 
 Ensure that manifest.json is properly configured with necessary permissions and content security policy.
+
+```json
 {
-"manifest_version": 3,
-"name": "JotForm Data Processor",
-"version": "1.0",
-"description": "Processes JotForm submissions and manages Google Docs.",
-"permissions": [
-"storage",
-"activeTab",
-"identity"
-],
-"background": {
-"service_worker": "background.js"
-},
-"content_scripts": [
-{
-"matches": ["<all_urls>"],
-"js": ["content.js"]
+    "manifest_version": 3,
+    "name": "JotForm Data Processor",
+    "version": "1.0",
+    "description": "Processes JotForm submissions and manages Google Docs.",
+    "permissions": [
+        "storage",
+        "activeTab",
+        "identity",
+        "https://www.googleapis.com/*",
+        "https://api.jotform.com/*",
+        "https://www.googleapis.com/auth/gmail.compose",
+        "https://www.googleapis.com/auth/documents",
+        "https://www.googleapis.com/auth/drive"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_icon": "images/default-icon.png",
+        "default_popup": "popup/popup.html"
+    },
+    "content_scripts": [
+        {
+            "js": ["scripts/jotform-content.js"],
+            "matches": ["https://www.jotform.com/*"]
+        },
+        {
+            "js": ["scripts/pawsetrack-content.js"],
+            "matches": ["https://www.pawsetrack.vet/*"],
+            "run_at": "document_end"
+        },
+        {
+            "js": ["scripts/calendar-content.js"],
+            "matches": ["https://calendar.google.com/calendar/*"],
+            "run_at": "document_end"
+        }
+    ],
+    "oauth2": {
+        "client_id": "your-client-id",
+        "scopes": ["https://www.googleapis.com/auth/gmail.compose", "https://www.googleapis.com/auth/documents", "https://www.googleapis.com/auth/drive"]
+    },
+    "host_permissions": ["*://*.google.com/*", "*://*.googleapis.com/*"]
 }
-],
-"action": {
-"default_popup": "popup.html",
-"default_icon": {
-"16": "icons/icon16.png",
-"48": "icons/icon48.png",
-"128": "icons/icon128.png"
-}
-}
-}
-Usage
-Fetching JotForm Data:
+```
 
-The extension communicates with the JotForm API to retrieve submission data.
-Use the extension's interface or command to trigger data fetching.
-Generating Documents:
+## Usage
 
-Templates for invoices, letters, and envelopes are used to create documents based on JotForm data.
-Review and adjust templates in Google Docs as needed.
-Managing Gmail Drafts:
+### Fetching JotForm Data
 
-The extension creates drafts in Gmail based on the processed data.
-Review and finalize drafts as necessary.
-Development
-Setting Up the Development Environment:
+The extension communicates with the JotForm API to retrieve submission data. Use the extension's popup interface to trigger data fetching.
 
-Install necessary dependencies and tools.
-Use a minifier and obfuscator for production builds.
-Testing:
+### Generating Documents
 
-Test the extension thoroughly in different scenarios to ensure it works as expected.
-Use Chrome's extension debugging tools for troubleshooting.
-Building and Packaging:
+Google doc templates for invoices, letters, and envelopes are used to create documents based on JotForm data. Review and adjust templates in Google Docs as needed.
 
-Minify and obfuscate code before publishing.
-Package the extension for distribution.
-Security Considerations
-Do not store sensitive information directly in the client-side code.
-Implement robust content security policies.
-Regularly review code for security vulnerabilities.
-Contributing
-Fork the repository and create a new branch for your changes.
-Submit a pull request with a detailed description of your changes.
-License
-This project is licensed under the MIT License.
+### Managing Gmail Drafts
 
-Contact
-For questions or support, please contact your-email@example.com.
+The extension creates drafts in Gmail based on the processed data. Review and finalize drafts as necessary.
+
+## Development
+
+### Setting Up the Development Environment
+
+1. **Install necessary dependencies:**
+
+    ```bash
+    npm install
+    ```
+
+### Scripts
+
+-   **Build for development:**
+
+    ```bash
+    npm run build:dev
+    ```
+
+-   **Build for production:**
+
+    ```bash
+    npm run build:prod
+    ```
+
+-   **Lint the code:**
+
+    ```bash
+    npm run lint
+    ```
+
+-   **Fix linting issues:**
+
+    ```bash
+    npm run lint:fix
+    ```
+
+### ESLint Configuration
+
+The ESLint configuration is defined in `eslint.config.mjs`. It includes settings for globals, ECMAScript version, source type, and specific linting rules.
+
+### Prettier Configuration
+
+The Prettier configuration is defined in `.prettierrc`. It includes settings for print width, tab width, use of semicolons, single quotes, trailing commas, bracket spacing, arrow function parentheses, and end of line.
+
+### Git Ignore
+
+The `.gitignore` file includes directories and files to be excluded from version control, such as `node_modules/`, `dist/`, and `package-lock.json`.
+
+### Testing
+
+Test the extension thoroughly in different scenarios to ensure it works as expected. Use Chrome's extension debugging tools for troubleshooting.
+
+### Building and Packaging
+
+Minify and obfuscate code before publishing. Package the extension for distribution.
+
+### Security Considerations
+
+-   Do not store sensitive information directly in the client-side code.
+-   Implement robust content security policies.
+-   Regularly review code for security vulnerabilities.
+
+## Contributing
+
+1. Fork the repository and create a new branch for your changes.
+2. Submit a pull request with a detailed description of your changes.
