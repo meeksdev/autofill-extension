@@ -471,7 +471,7 @@ async function storeJotformData(data) {
     if (!data.additionalBoxedFurClipping) data.additionalBoxedFurClipping = 0;
     if (!data.additionalFurClipping) data.additionalFurClipping = 0;
     if (!data.additionalNosePrint) data.additionalNosePrint = 0;
-    if (!data.additonalPawPrint) data.additonalPawPrint = 0;
+    if (!data.additionalPawPrint) data.additionalPawPrint = 0;
 
     let clientApartmentNumber = data.address['addr_line2'] || '';
 
@@ -612,11 +612,11 @@ function createInvoice(data) {
                 subtotal: data.additionalNosePrint * parseFloat(data.nosePrintPrice),
             });
         }
-        if (data.additonalPawPrint) {
+        if (data.additionalPawPrint) {
             products.push({
-                name: `Additional Paw Print x${data.additonalPawPrint}`,
-                quantity: data.additonalPawPrint,
-                subtotal: data.additonalPawPrint * parseFloat(data.pawPrintPrice),
+                name: `Additional Paw Print x${data.additionalPawPrint}`,
+                quantity: data.additionalPawPrint,
+                subtotal: data.additionalPawPrint * parseFloat(data.pawPrintPrice),
             });
         }
 
