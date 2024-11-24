@@ -446,6 +446,25 @@ async function gatherAdditionalInformation(data) {
 async function storeJotformData(data) {
     console.log('Step 3: Store Jotform Data', data);
 
+    if (!data.cremationType) throw new Error('Cremation type is missing or empty.');
+
+    if (!data.nameOf) throw new Error('Pet name is missing or empty.');
+    if (!data.species) throw new Error('Species is missing or empty.');
+    if (!data.breed) throw new Error('Breed is missing or empty.');
+    if (!data.approximateWeight) throw new Error('Approximate weight is missing or empty.');
+    if (!data.dateOf6) throw new Error('Passing date is missing or empty.');
+    if (!data.sex) throw new Error('Sex is missing or empty.');
+    if (!data.age) throw new Error('Age is missing or empty.');
+    if (!data.clientName['first'] || !data.clientName['last']) throw new Error("Client's name is missing or empty.");
+    if (!data.email) data.email = ''; // Not Required
+    if (!data.phoneNumber['full']) throw new Error("Client's phone number is missing or empty.");
+    if (!data.address['addr_line1']) throw new Error("Client's address is missing or empty.");
+    let clientApartmentNumber = data.address['addr_line2'] || '';
+    if (!data.address['city']) throw new Error("Client's city is missing or empty.");
+    if (!data.address['state']) throw new Error("Client's state is missing or empty.");
+    if (!data.address['postal']) throw new Error("Client's postal code is missing or empty.");
+
+    if (!data.urnChoices) throw new Error('Urn choice is missing or empty.');
     let isUrnEngraved = false;
     let urnLine1, urnLine2, urnLine3, urnLine4;
     if (data.engravingLine1 || data.engravingLine2 || data.engravingLine3 || data.engravingLine4) {
@@ -466,14 +485,15 @@ async function storeJotformData(data) {
     if (!urnLine3) urnLine3 = '';
     if (!urnLine4) urnLine4 = '';
 
+    if (!data.pawOrNosePrint) throw new Error('Paw or nose print choice is missing or empty.');
     if (!data.clayNosePrint) data.clayNosePrint = 0;
     if (!data.clayPawPrint) data.clayPawPrint = 0;
     if (!data.additionalBoxedFurClipping) data.additionalBoxedFurClipping = 0;
     if (!data.additionalFurClipping) data.additionalFurClipping = 0;
     if (!data.additionalNosePrint) data.additionalNosePrint = 0;
     if (!data.additionalPawPrint) data.additionalPawPrint = 0;
-
-    let clientApartmentNumber = data.address['addr_line2'] || '';
+    if (!data.collectionLocation) throw new Error('Collection location is missing or empty.');
+    if (!data.petHospital) throw new Error('Pet hospital is missing or empty.');
 
     return new Promise((resolve, reject) => {
         chrome.storage.local.set(
