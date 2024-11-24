@@ -460,6 +460,7 @@ async function storeJotformData(data) {
     if (!data.phoneNumber['full']) throw new Error("Client's phone number is missing or empty.");
     if (!data.address['addr_line1']) throw new Error("Client's address is missing or empty.");
     let clientApartmentNumber = data.address['addr_line2'] || '';
+    data.address['addr_line2'] = clientApartmentNumber;
     if (!data.address['city']) throw new Error("Client's city is missing or empty.");
     if (!data.address['state']) throw new Error("Client's state is missing or empty.");
     if (!data.address['postal']) throw new Error("Client's postal code is missing or empty.");
