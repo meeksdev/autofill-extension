@@ -278,6 +278,11 @@ async function fillBundlesForm(storage, tabId) {
 async function selectUrn(storage, tabId) {
     console.log('selectUrn');
 
+    // Temporary fix for the hand-carved wood urn
+    if (storage.urnChoice === 'Hand-Carved Wood Standard Urn') {
+        storage.urnChoice = 'Carved Wood Standard Urn';
+    }
+
     const urnButton = await waitForCondition(() =>
         [...document.querySelectorAll('div[role=button]')].find(div => div.querySelector('.item-name')?.textContent.includes(storage.urnChoice))
     );
@@ -550,7 +555,13 @@ async function fillReviewForm(storage) {
         const specialInstructionsField = await waitForCondition(() => document.getElementById('specialInstructions'));
         specialInstructionsField.value = "Mail ashes to Owner's home address";
     } else if (storage.collectionLocation === 'Sarena') {
-        // Do Nothing
+        // Click Other and enter "Return ashes to Dr. Olsen"
+        const deliveryButton = await waitForCondition(() => [...document.querySelectorAll('button')].find(button => button.textContent.includes('Other')));
+        console.log(deliveryButton);
+        deliveryButton.click();
+
+        const specialInstructionsField = await waitForCondition(() => document.getElementById('specialInstructions'));
+        specialInstructionsField.value = 'Return ashes to Dr. Olsen';
     }
 
     console.log(extraElements);
