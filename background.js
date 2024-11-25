@@ -446,7 +446,16 @@ async function gatherAdditionalInformation(data) {
 async function storeJotformData(data) {
     console.log('Step 3: Store Jotform Data', data);
 
-    if (!data.cremationType) throw new Error('Cremation type is missing or empty.');
+    if (!data.cremationType) {
+        throw new Error('Cremation type is missing or empty.');
+    }
+    if (data.cremationType === 'Private') {
+        if (!data.urnChoices) throw new Error('Urn choice is missing or empty.');
+        if (!data.collectionLocation) throw new Error('Collection location is missing or empty.');
+    }
+    if (data.cremationType !== 'Retain') {
+        if (!data.pawOrNosePrint) throw new Error('Paw or nose print choice is missing or empty.');
+    }
 
     if (!data.nameOf) throw new Error('Pet name is missing or empty.');
     if (!data.species) throw new Error('Species is missing or empty.');
@@ -465,7 +474,6 @@ async function storeJotformData(data) {
     if (!data.address['state']) throw new Error("Client's state is missing or empty.");
     if (!data.address['postal']) throw new Error("Client's postal code is missing or empty.");
 
-    if (!data.urnChoices) throw new Error('Urn choice is missing or empty.');
     let isUrnEngraved = false;
     let urnLine1, urnLine2, urnLine3, urnLine4;
     if (data.engravingLine1 || data.engravingLine2 || data.engravingLine3 || data.engravingLine4) {
@@ -486,14 +494,12 @@ async function storeJotformData(data) {
     if (!urnLine3) urnLine3 = '';
     if (!urnLine4) urnLine4 = '';
 
-    if (!data.pawOrNosePrint) throw new Error('Paw or nose print choice is missing or empty.');
     if (!data.clayNosePrint) data.clayNosePrint = 0;
     if (!data.clayPawPrint) data.clayPawPrint = 0;
     if (!data.additionalBoxedFurClipping) data.additionalBoxedFurClipping = 0;
     if (!data.additionalFurClipping) data.additionalFurClipping = 0;
     if (!data.additionalNosePrint) data.additionalNosePrint = 0;
     if (!data.additionalPawPrint) data.additionalPawPrint = 0;
-    if (!data.collectionLocation) throw new Error('Collection location is missing or empty.');
     if (!data.petHospital) throw new Error('Pet hospital is missing or empty.');
 
     return new Promise((resolve, reject) => {
