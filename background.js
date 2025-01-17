@@ -594,12 +594,12 @@ function createInvoice(data) {
         } else if (data.cremationType === 'Memorial' && data.approximateWeight < 80) {
             products.push({
                 name: 'Memorial Cremation (< 80lbs)',
-                subtotal: parseFloat(data.smallPrivateCremationPrice),
+                subtotal: parseFloat(data.smallMemorialCremationPrice),
             });
         } else if (data.cremationType === 'Memorial' && data.approximateWeight >= 80) {
             products.push({
                 name: 'Memorial Cremation (>= 80lbs)',
-                subtotal: parseFloat(data.largePrivateCremationPrice),
+                subtotal: parseFloat(data.largeMemorialCremationPrice),
             });
         }
 

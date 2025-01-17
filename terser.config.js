@@ -35,12 +35,12 @@ async function updateManifest() {
 
         if (isProduction) {
             // Modify manifest for production
-            manifest.version = '1.5.5'; // Set version for production
+            manifest.version = '1.5.6'; // Set version for production
             manifest.name = 'Sarena Autofill'; // Add a production-specific name
             manifest.oauth2.client_id = '746464567000-u21pn0pa9a5q18fpmeqg9hp7jr2vt3d1.apps.googleusercontent.com';
         } else {
             // Modify manifest for development
-            manifest.version = '1.5.5'; // Set version for development
+            manifest.version = '1.5.6'; // Set version for development
             manifest.name = 'Sarena Autofill (Testing)'; // Add a development-specific name
             manifest.oauth2.client_id = '746464567000-su8m4egfppi7mvhln595jjbgg2fh3vcj.apps.googleusercontent.com';
         }
