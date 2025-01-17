@@ -23,10 +23,19 @@ function createFormButtonModal() {
     if (existingAutofillModal) {
         existingAutofillModal.style.display = 'flex';
 
-        const gatherButton = document.getElementById('AutofillModal-GatherButton');
-        gatherButton.style.backgroundColor = '#4285f4';
-        gatherButton.style.cursor = 'pointer';
-        gatherButton.disabled = false;
+        const docsAndEmailButton = document.getElementById('AutofillModal-DocsAndEmailButton');
+        docsAndEmailButton.textContent = 'Fill Docs and Email';
+        docsAndEmailButton.style.color = '#fff';
+        docsAndEmailButton.style.backgroundColor = '#4285f4';
+        docsAndEmailButton.style.cursor = 'pointer';
+        docsAndEmailButton.disabled = false;
+
+        const crematoryButton = document.getElementById('AutofillModal-CrematoryButton');
+        crematoryButton.textContent = 'Fill Crematory Forms';
+        crematoryButton.style.color = '#fff';
+        crematoryButton.style.backgroundColor = '#4285f4';
+        crematoryButton.style.cursor = 'pointer';
+        crematoryButton.disabled = false;
 
         const loadingText = document.getElementById('autofillModal-LoadingText');
         loadingText.style.display = 'none';
@@ -65,7 +74,7 @@ function createFormButtonModal() {
     docsAndEmailButton.style.borderRadius = '5px';
     docsAndEmailButton.style.cursor = 'pointer';
     docsAndEmailButton.style.padding = '10px 20px';
-    docsAndEmailButton.id = 'AutofillModal-GatherButton';
+    docsAndEmailButton.id = 'AutofillModal-DocsAndEmailButton';
 
     // Create the crematoryButton element
     const crematoryButton = document.createElement('button');
@@ -75,7 +84,7 @@ function createFormButtonModal() {
     crematoryButton.style.borderRadius = '5px';
     crematoryButton.style.cursor = 'pointer';
     crematoryButton.style.padding = '10px 20px';
-    crematoryButton.id = 'AutofillModal-GatherButton';
+    crematoryButton.id = 'AutofillModal-CrematoryButton';
 
     // Add a close button to the modal
     const closeButton = document.createElement('div');
