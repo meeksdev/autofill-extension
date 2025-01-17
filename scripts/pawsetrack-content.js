@@ -554,6 +554,7 @@ async function fillReviewForm(storage) {
 
         const specialInstructionsField = await waitForCondition(() => document.getElementById('specialInstructions'));
         specialInstructionsField.value = "Mail ashes to Owner's home address";
+        specialInstructionsField.dispatchEvent(inputEvent);
     } else if (storage.collectionLocation === 'Sarena') {
         // Click Other and enter "Return ashes to Dr. Olsen"
         const deliveryButton = await waitForCondition(() => [...document.querySelectorAll('button')].find(button => button.textContent.includes('Other')));
@@ -562,6 +563,7 @@ async function fillReviewForm(storage) {
 
         const specialInstructionsField = await waitForCondition(() => document.getElementById('specialInstructions'));
         specialInstructionsField.value = 'Return ashes to Dr. Olsen';
+        specialInstructionsField.dispatchEvent(inputEvent);
     }
 
     console.log(extraElements);
