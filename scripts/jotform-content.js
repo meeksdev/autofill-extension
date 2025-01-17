@@ -117,9 +117,10 @@ function createFormButtonModal() {
             if (response.success) {
                 console.log('%cForm Submission:', 'color: green', response.data);
                 docsAndEmailButton.textContent = 'Completed.';
-                docsAndEmailButton.style.backgroundColor = '#fff';
+
                 docsAndEmailButton.style.color = 'green';
                 docsAndEmailButton.style.cursor = 'default';
+                docsAndEmailButton.style.backgroundColor = '#fff';
                 loadingText.style.display = 'none';
 
                 window.open(`https://mail.google.com/mail/u/0/#drafts/${response.draftId}`, '_blank');
