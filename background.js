@@ -202,9 +202,9 @@ function createGmailDraft(data) {
 
     <p style="margin: 16px 0";>Dear Doctors and Staff,</p>
 
-    <p style="margin: 16px 0";>I regret to inform you of the passing of our mutual patient, ${data.nameOf}, who was humanely euthanized in the comfort of home due to declining quality of life. My condolences for the loss of your patient.<p>
+    <p style="margin: 16px 0";>We regret to inform you of the passing of our mutual patient, ${data.nameOf}, who was humanely euthanized in the comfort of home due to declining quality of life. Our condolences for the loss of your patient.<p>
 
-    <p style="margin: 16px 0";>I sincerely appreciate your referral and time. Please do not hesitate to contact me with any questions.</p>
+    <p style="margin: 16px 0";>We sincerely appreciate your referral and time. Please do not hesitate to contact us with any questions.</p>
 
     <div;>
         <b>Sarena Olsen, MS, DVM, CPEV</b>
@@ -572,7 +572,8 @@ function createInvoice(data) {
             return reject(new Error('Could not obtain Invoice Template ID. Check settings.'));
         }
 
-        const currentDate = new Date().toLocaleDateString('en-US');
+        // const currentDate = new Date().toLocaleDateString('en-US');
+        const currentDate = data.dateOf6['datetime']; // Use the date of passing as the invoice date
 
         let products = [];
         // Euthanasia

@@ -452,8 +452,9 @@ async function fillMemorialForm(storage, tabId) {
     // ADDITIONAL FUR CLIPPING
     for (let i = 0; i < storage.additionalFurClipping; i++) {
         console.log('Add Fur Clipping');
+        // Sarena is now handling this herself, so we don't need to do anything here.
 
-        const specialServiceButton = await waitForCondition(() => {
+        /* const specialServiceButton = await waitForCondition(() => {
             return [...document.querySelectorAll('div[role=button]')].find(div => div.querySelector('.item-name')?.textContent.includes('Fur Clipping'));
         });
         specialServiceButton.click();
@@ -466,7 +467,7 @@ async function fillMemorialForm(storage, tabId) {
         await waitForCondition(() => addButton.disabled === false);
         addButton.click();
 
-        await waitForCondition(() => !modal.isConnected);
+        await waitForCondition(() => !modal.isConnected); */
     }
 
     // ADDITIONAL NOSE PRINT
