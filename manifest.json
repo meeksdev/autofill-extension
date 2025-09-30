@@ -22,18 +22,12 @@
     },
     "content_scripts": [
         {
-            "js": ["scripts/jotform-content.js"],
-            "matches": ["https://www.jotform.com/*"]
+            "js": [ "scripts/simpleDVM-content.js" ],
+            "matches": [ "https://app.simpledvm.com/*" ]
         },
         {
-            "js": ["scripts/pawsetrack-content.js"],
-            "matches": ["https://www.pawsetrack.vet/*"],
-            "run_at": "document_end"
-        },
-        {
-            "js": ["scripts/calendar-content.js"],
-            "matches": ["https://calendar.google.com/calendar/*"],
-            "run_at": "document_end"
+            "js": [ "scripts/vetsnap-content.js" ],
+            "matches": [ "https://vetsnap.com/*" ]
         }
     ],
     "oauth2": {
