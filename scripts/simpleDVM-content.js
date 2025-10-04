@@ -298,9 +298,13 @@ function GetClientAndPetDataFromPage() {
     console.log("petName:", petName);
 
     // species
-    const petSpecies = Array.from(petInfoSection.querySelectorAll('strong')).find(strong => strong.textContent.trim() === 'Species:').parentElement.nextSibling;
-    data.petSpecies = petSpecies.textContent.trim();
-    console.log("petName:", petSpecies);
+    const petSpeciesInput = Array.from(petInfoSection.querySelectorAll('strong')).find(strong => strong.textContent.trim() === 'Species:').parentElement.nextSibling;
+    console.log("petSpeciesInput:", petSpeciesInput);
+    const [petSpecies, petBreed] = separateSpeciesAndBreed(petSpeciesInput.textContent.trim())
+    console.log("petSpecies:", petSpecies, "petBreed:", petBreed);
+    data.petSpecies = petSpecies;
+    data.petBreed = petBreed;
+    //data.petSpecies = petSpecies.textContent.trim();
 
     // sex
     const petSex = Array.from(petInfoSection.querySelectorAll('strong')).find(strong => strong.textContent.trim() === 'Sex:').parentElement.nextSibling;
@@ -343,6 +347,20 @@ function printGoogleDoc(docId) {
     window.print();
 } */
 
+/**
+ * Separates a string into two parts: the text outside and inside any type of brackets.
+ * Supports (), [], and {} brackets.
+ * Example: "Species [Breed]" => ["Species", "Breed"]
+ * @param {string} input - The combined string (e.g., "Species [Breed]")
+ * @returns {[string, string]} - An array with [outsideText, insideText], trimmed. If no brackets, returns [input, ""]
+ */
+function separateSpeciesAndBreed(input) {
+    const match = input.match(/^(.*?)\s*[\[\(\{](.*?)[\]\)\}]\s*$/);
+    if (match) {
+        return [match[1].trim(), match[2].trim()];
+    }
+    return [input.trim(), ""];
+}
 
 function parseAddress(addressLine1, addressLine2) {
     console.log("AddressLine1:", addressLine1);
