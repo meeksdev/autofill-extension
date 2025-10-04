@@ -122,10 +122,15 @@ function createFormButtonModal() {
         //console.log('%cSubmission ID from URL:', 'color: green', submissionId);
 
         // Get Data from the page
-        const clientAndPetData = GetClientAndPetDataFromPage();
-        console.log(clientAndPetData);
+        let clientAndPetData;
+        try {
+            clientAndPetData = GetClientAndPetDataFromPage();
+            console.log(clientAndPetData);
+        } catch (error) {
+            handleError("Failed to gather client and pet data:", error, sympathyDocsButton);
+        }
 
-        // Send a message to the background script to fetch data from JotForm
+        // Send a message to the background script to build google docs
         chrome.runtime.sendMessage({ action: 'fillSympathyCardAndEnvelope', data: clientAndPetData }, async function (response) {
             if (response.success) {
                 console.log('%cForm Submission:', 'color: green', response.data);
@@ -142,13 +147,15 @@ function createFormButtonModal() {
                 // if (response.data.invoiceDocId) printGoogleDoc(response.data.invoiceDocId);
                 // if (response.data.invoiceDocId) window.open(`https://docs.google.com/document/d/${response.data.invoiceDocId}/edit`, '_blank');
             } else {
-                console.error('Failed to Fill Docs and Email:', response.error);
-                // alert(`Failed to Fill Crematory Site. ${response.error}`);
-                sympathyDocsButton.textContent = `Failed: ${response.error}`;
-                sympathyDocsButton.style.backgroundColor = '#fff';
-                sympathyDocsButton.style.color = 'red';
-                sympathyDocsButton.style.cursor = 'default';
-                loadingText.style.display = 'none';
+                handleError("Failed to Fill Docs and Email:", response.error, sympathyDocsButton);
+
+                //console.error('Failed to Fill Docs and Email:', response.error);
+                //// alert(`Failed to Fill Crematory Site. ${response.error}`);
+                //sympathyDocsButton.textContent = `Failed: ${response.error}`;
+                //sympathyDocsButton.style.backgroundColor = '#fff';
+                //sympathyDocsButton.style.color = 'red';
+                //sympathyDocsButton.style.cursor = 'default';
+                //loadingText.style.display = 'none';
             }
         });
     });
@@ -165,8 +172,13 @@ function createFormButtonModal() {
         //console.log('%cSubmission ID from URL:', 'color: green', submissionId);
 
         // Get Data from the page
-        const clientAndPetData = GetClientAndPetDataFromPage();
-        console.log(clientAndPetData);
+        let clientAndPetData;
+        try {
+            clientAndPetData = GetClientAndPetDataFromPage();
+            console.log(clientAndPetData);
+        } catch (error) {
+            handleError("Failed to gather client and pet data:", error, snapVetButton);
+        }
 
         // Send a message to the background script to fetch data from JotForm
         chrome.runtime.sendMessage({ action: 'addClientAndPatientOnVetSnap', data: clientAndPetData }, async function (response) {
@@ -175,13 +187,14 @@ function createFormButtonModal() {
                 // modal.style.display = "none";
                 loadingText.style.display = 'none';
             } else {
-                console.error('Failed to Fill VetSnap Client Site:', response.error);
+                handleError("Failed to Fill VetSnap Client Site:", response.error, snapVetButton);
+                /*console.error('Failed to Fill VetSnap Client Site:', response.error);
                 // alert(`Failed to Fill Crematory Site. ${response.error}`);
                 snapVetButton.textContent = `Failed: ${response.error}`;
                 snapVetButton.style.backgroundColor = '#fff';
                 snapVetButton.style.color = 'red';
                 snapVetButton.style.cursor = 'default';
-                loadingText.style.display = 'none';
+                loadingText.style.display = 'none';*/
             }
         });
     });
@@ -229,18 +242,31 @@ function createFormButtonModal() {
         });
     }); */
 
+    function handleError(errorMessage, error, button) {
+        console.error(errorMessage, error);
+        // alert(`Failed to Fill Crematory Site. ${response.error}`);
+        button.textContent = `Failed: ${error}`;
+        button.style.backgroundColor = '#fff';
+        button.style.color = 'red';
+        button.style.cursor = 'default';
+        loadingText.style.display = 'none';
+    }
+
     // Add an event listener to the close button to hide the modal
     closeButton.addEventListener('click', () => {
         modal.style.display = 'none';
     });
 }
 
+
+
 function GetClientAndPetDataFromPage() {
+    //try {
     const data = {};
 
     // ---Get Client Info Section---
-    const clientInfoSection = Array.from(document.querySelectorAll('span')).find(span => span.textContent.trim() === 'Client Info').parentElement.parentElement
-        .parentElement;
+    const clientInfoSection = Array.from(document.querySelectorAll('span')).find(span => span.textContent.trim() === 'Client Info').parentElement.parentElement.parentElement;
+    console.log("clientInfoSection:", clientInfoSection);
 
     // Get Client Name
     const clientName = Array.from(clientInfoSection.querySelectorAll('p')).find(p => p.textContent.trim() === 'Name:').nextSibling;
@@ -250,46 +276,59 @@ function GetClientAndPetDataFromPage() {
         lastName: clientName.childNodes[2].textContent.trim(),
     };
     data.clientName.fullName = `${data.clientName.firstName} ${data.clientName.lastName}`;
+    console.log("clientName:", data.clientName);
 
     // phone number
     const clientNumber = Array.from(clientInfoSection.querySelectorAll('p')).find(p => p.textContent.trim() === 'Phone (Primary):').nextSibling.firstChild;
     data.clientNumber = clientNumber.textContent.trim();
+    console.log("clientNumber:", data.clientNumber);
 
     // email
     const clientEmail = Array.from(clientInfoSection.querySelectorAll('p')).find(p => p.textContent.trim() === 'Email:').nextSibling;
     data.clientEmail = clientEmail.textContent.trim();
+    console.log("clientEmail:", data.clientEmail);
 
     // ---Get Pet Info Section---
-    const petInfoSection = Array.from(document.querySelectorAll('span')).find(span => span.textContent.trim() === 'Patients & Services').parentElement
-        .parentElement.parentElement;
+    const petInfoSection = Array.from(document.querySelectorAll('span')).find(span => span.textContent.trim() === 'Patients & Services').parentElement.parentElement.parentElement;
+    console.log("petInfoSection:", petInfoSection);
 
     // Get Pet Name
-    const petName = Array.from(petInfoSection.querySelectorAll('strong')).find(strong => strong.textContent.trim() === 'Name:').parentElement.nextSibling
-        .firstChild.firstChild;
+    const petName = Array.from(petInfoSection.querySelectorAll('strong')).find(strong => strong.textContent.trim() === 'Name:').parentElement.nextSibling.firstChild.firstChild;
     data.petName = petName.textContent.trim();
+    console.log("petName:", petName);
 
     // species
     const petSpecies = Array.from(petInfoSection.querySelectorAll('strong')).find(strong => strong.textContent.trim() === 'Species:').parentElement.nextSibling;
     data.petSpecies = petSpecies.textContent.trim();
+    console.log("petName:", petSpecies);
 
     // sex
     const petSex = Array.from(petInfoSection.querySelectorAll('strong')).find(strong => strong.textContent.trim() === 'Sex:').parentElement.nextSibling;
     data.petSex = petSex.textContent.trim();
+    console.log("petSex:", petSex);
 
     // pronoun1 (handle in background)
     // pronoun2 (handle in background)
 
     // Get Appointment Info
-    const appointmentInfoSection = Array.from(document.querySelectorAll('span')).find(span => span.textContent.trim() === 'Appointment Info').parentElement
-        .parentElement.parentElement;
+    const appointmentInfoSection = Array.from(document.querySelectorAll('span')).find(span => span.textContent.trim() === 'Appointment Info').parentElement.parentElement.parentElement;
+    console.log("appointmentInfoSection:", appointmentInfoSection);
     const clientAddress = Array.from(appointmentInfoSection.querySelectorAll('p')).find(p => p.textContent.trim() === 'Address:').nextSibling.firstChild; // address
     data.clientAddress = {
         line1: clientAddress.childNodes[0].textContent.trim(),
         line2: clientAddress.childNodes[2].textContent.trim(),
     };
     Object.assign(data.clientAddress, parseAddress(data.clientAddress.line1, data.clientAddress.line2));
+    console.log("clientAddress:", data.clientAddress);
 
+    //throw new Error("Function not ready yet"); // FOR TESTING
     return data;
+    //} catch (error) {
+        //alert(`Failed to gather client and pet data: ${error.message}`);
+        // Optionally, log the error or return null/undefined
+        //throw error;
+
+
 }
 
 /**
