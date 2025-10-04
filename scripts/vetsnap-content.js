@@ -1,3 +1,5 @@
+console.log("vetsnap-content.js loaded");
+
 // Prepare an event to notify the framework of the change
 const inputEvent = new Event('input', { bubbles: true });
 
@@ -12,24 +14,36 @@ const inputEvent = new Event('input', { bubbles: true });
  * @param {string} message.action - The action to be performed.
  * @param {number} message.tabId - The ID of the tab where the action should be performed.
  */
-chrome.runtime.onMessage.addListener(async message => {
+chrome.runtime.onMessage.addListener(async (message)=> {
     const { type, action } = message;
     console.log(message);
 
-    if (type === 'NEW') {
-        if (action === 'addClientAndPatient') {
-            console.log('Received addClientAndPatient message');
-            addClientAndPatient(message.tabId, message.data);
+    if (type === 'NEW' && action === 'addClientAndPatient') {
+        console.log('Received addClientAndPatient message');
+        try {
+            await checkClientExists(message.tabId, message.data);
+            console.log("Completed Client and Patient addition.");
+            //sendResponse({ success: true });
+            sendResponseToBackground({ success: true });
+        } catch (error) {
+            console.error("Failed Client and Patient addition.");
+            sendResponseToBackground({ success: false, error: error.message });
+            //sendResponse({ success: false, error: error.message });
         }
+        //return true;
     }
 });
+function sendResponseToBackground(response) {
+    chrome.runtime.sendMessage({ action: 'responseFromVetsnapContent', response: response });
+}
+
 
 /**
  * Initiates the process of adding a new client by searching for existing clients and patients and then handling the result accordingly.
  * @param {number} tabId - The ID of the tab where the new order should be started.
  */
-async function addClientAndPatient(tabId, data) {
-    console.log('addClientAndPatient with data:', data);
+async function checkClientExists(tabId, data) {
+    console.log('checkClientExists with data:', data);
 
     const filterDropdownElement = document.getElementById("Filter Type").nextElementSibling.querySelector('input'); // get filter type dropdown
     filterDropdownElement.value = 'client-name'; // set filter type to patient name
@@ -49,6 +63,7 @@ async function addClientAndPatient(tabId, data) {
 
     let clientCard = await checkClientExistsAndReturnTheirCard(data);
     if (clientCard) {
+        console.log("clientCard was found", clientCard);
         const viewPatientsDropdown = Array.from(clientCard.querySelectorAll('button')).find(button => button.textContent.trim() === "View Patients");
         console.log("View Patients Dropdown: ", viewPatientsDropdown);
         if (viewPatientsDropdown)
@@ -56,7 +71,7 @@ async function addClientAndPatient(tabId, data) {
         const addPatientButton = Array.from(clientCard.querySelectorAll("button")).find(button => button.textContent.trim() === "Add Patient");
         console.log(addPatientButton);
 
-        addPatient(addPatientButton, data);
+        await addPatient(addPatientButton, data);
     }
     else {
         console.log("Client not found, adding new client");
@@ -77,33 +92,50 @@ async function addClientAndPatient(tabId, data) {
         const addPatientButton = Array.from(clientCard.querySelectorAll("button")).find(button => button.textContent.trim() === "Add Patient");
         console.log(addPatientButton);
 
-        addPatient(addPatientButton, data);
+        await addPatient(addPatientButton, data);
     }
 }
 
 async function checkClientExistsAndReturnTheirCard(data) {
+    console.log("checkClientExistsAndReturnTheirCard", data);
+
     // if no results, click Create New Client button
     // if results, click first result
     // perhaps I simply use the edit client button or view patients dropdown to determine if the client exists
     // compare the client's full name and address to the one in the appointment
     // wait for results to load
-    await waitForCondition(() => Array.from(document.querySelectorAll("p")).filter(p => p.textContent.includes("Client Full Name")).length > 0, undefined, 2000);
-    const clientHeadersList = Array.from(document.querySelectorAll("p")).filter(p => p.textContent.includes("Client Full Name"));
-    console.log("Client Headers List:", clientHeadersList);
-    //let clientFound = false;
-    for (const headerElement of clientHeadersList) {
-        const clientFullName = await waitForCondition(() => headerElement.nextElementSibling.textContent.trim());
-        console.log("Client Full Name: '" + clientFullName + "'; Searching for: '" + data.clientName.fullName + "'");
-        // if the client full name matches the appointment's client full name, break and run addPatient()
-        if (clientFullName === data.clientName.fullName) {
-            console.log("Found Client. Getting Client Card...");
-            const clientCard = await waitForCondition(() => headerElement.parentElement.parentElement.parentElement.parentElement.parentElement); // navigate to the client card
-            return clientCard;
-        }
-    };
 
-    console.log("Client Not Found...");
-    return false;
+
+    const result = await waitForCondition(() => {
+        const clientHeaders = Array.from(document.querySelectorAll("p")).filter(p => p.textContent.includes("Client Full Name"));
+        if (clientHeaders.length > 0) {
+            return { found: "client", elements: clientHeaders };
+        }
+        const noClients = Array.from(document.querySelectorAll("div")).find(div => div.textContent.includes("No Clients Found"));
+        if (noClients) {
+            return { found: "none", element: noClients };
+        }
+        return false; // keep waiting
+    });
+
+
+    if (result.found === "none") {
+        console.log("Client Not Found...");
+        return false;
+    } else {
+        const clientHeadersList = result.elements;
+        console.log("Client Headers List:", clientHeadersList);
+        for (const headerElement of clientHeadersList) {
+            const clientFullName = await waitForCondition(() => headerElement.nextElementSibling.textContent.trim());
+            console.log("Client Full Name: '" + clientFullName + "'; Searching for: '" + data.clientName.fullName + "'");
+            // if the client full name matches the appointment's client full name, break and run addPatient()
+            if (clientFullName === data.clientName.fullName) {
+                console.log("Found Client. Getting Client Card...");
+                const clientCard = await waitForCondition(() => headerElement.parentElement.parentElement.parentElement.parentElement.parentElement); // navigate to the client card
+                return clientCard;
+            }
+        };
+    }
 }
 
 async function addNewClient(data) {
@@ -217,8 +249,8 @@ async function addPatient(addPatientButton, data) {
     console.log("Species:", speciesInput);
 
     const breedInput = Array.from(modalWindow.querySelectorAll("label")).find(label => label.textContent.trim() === "Breed").parentElement.querySelector("input");
-    //breedInput.value = data.petBreed; // set breed
-    //breedInput.dispatchEvent(inputEvent); // dispatch input event to trigger any listeners
+    breedInput.value = data.petBreed; // set breed
+    breedInput.dispatchEvent(inputEvent); // dispatch input event to trigger any listeners
     console.log("Breed:", breedInput);
 
     // click create & add

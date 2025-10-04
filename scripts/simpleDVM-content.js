@@ -132,6 +132,7 @@ function createFormButtonModal() {
 
         // Send a message to the background script to build google docs
         chrome.runtime.sendMessage({ action: 'fillSympathyCardAndEnvelope', data: clientAndPetData }, async function (response) {
+            console.log("Response Received");
             if (response.success) {
                 console.log('%cForm Submission:', 'color: green', response.data);
                 sympathyDocsButton.textContent = 'Completed.';
@@ -175,13 +176,14 @@ function createFormButtonModal() {
         let clientAndPetData;
         try {
             clientAndPetData = GetClientAndPetDataFromPage();
-            console.log(clientAndPetData);
+            console.log("clientAndPetData:", clientAndPetData);
         } catch (error) {
             handleError("Failed to gather client and pet data:", error, snapVetButton);
         }
 
         // Send a message to the background script to fetch data from JotForm
         chrome.runtime.sendMessage({ action: 'addClientAndPatientOnVetSnap', data: clientAndPetData }, async function (response) {
+            console.log("Response Received");
             if (response.success) {
                 console.log('%cForm Submission:', 'color: green', response.data);
                 // modal.style.display = "none";

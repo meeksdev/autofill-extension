@@ -88,7 +88,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 });
         }); */
         return true; // Keep the messaging channel open for async response
-    } else if (message.action === 'openAndPrintDoc') {
+    }
+    else if (message.action === 'openAndPrintDoc') {
         const docUrl = `https://docs.google.com/document/d/${message.docId}/edit`;
         chrome.tabs.create({ url: docUrl }, function (tab) {
             chrome.tabs.onUpdated.addListener(function onTabUpdated(tabId, info) {
@@ -101,9 +102,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
             });
         });
-    } else if (message.action === 'deleteDoc') {
+    }
+    else if (message.action === 'deleteDoc') {
         deleteDocument(message.docId);
-    } else if (message.action === 'addClientAndPatientOnVetSnap') {
+    }
+    else if (message.action === 'addClientAndPatientOnVetSnap') {
         console.log('addClientAndPatientOnVetSnap');
         const vetSnapUrl = 'https://vetsnap.com/portal/a/controlled/patient-client-management';
         chrome.tabs.create({ url: vetSnapUrl }, function (tab) {
@@ -120,6 +123,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
             });
         });
+        return true;
+    }
+    else if (message.action === 'responseFromVetsnapContent') {
+        console.log("Response received from Vetsnap content script:", message);
+        if (message.response && message.response.success) {
+            console.log("Vetsnap operation successful:", message.response);
+            sendResponse(message.response);
+        } else {
+            console.error("Vetsnap operation failed:", message.response);
+            sendResponse({ success: false, error: message.response && message.response.error ? message.response.error : "No response from content script" });
+        }
     }
 });
 
