@@ -171,8 +171,8 @@ async function addNewClient(data) {
 
     // enter Client Address Line 2
     const addressLine2Input = await waitForCondition(() => Array.from(modalWindow.querySelectorAll("label")).find(label => label.textContent.trim() === "Client Address 2").nextElementSibling.querySelector("input"));
-    //addressLine2Input.value = data.clientAddress.line2;
-    //addressLine2Input.dispatchEvent(inputEvent);
+    addressLine2Input.value = data.clientAddress.unit;
+    addressLine2Input.dispatchEvent(inputEvent);
     console.log("Address Line 2 Input: ", addressLine2Input);
 
     // enter Client City

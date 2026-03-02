@@ -651,8 +651,8 @@ function createEnvelope(data) {
         createDocFromTemplate(data.envelopeTemplateId, `(Envelope) ${data.nameOf}'s Passing ${data.submissionDate}`, {
             familyName: data.clientName.lastName,
             AddressLine1: data.clientAddress.line1,
-            AddressLine2: data.clientAddress.line2,
-            AddressLine3: '',
+            AddressLine2: data.clientAddress.line2 == '' ? data.clientAddress.line3 : data.clientAddress.line2,
+            AddressLine3: data.clientAddress.line2 == '' ? '' : data.clientAddress.line3,
         })
             .then(newDocId => {
                 // If the document creation is successful, log and resolve
