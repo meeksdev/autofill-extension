@@ -107,6 +107,7 @@ async function checkClientExistsAndReturnTheirCard(data) {
 
 
     const result = await waitForCondition(() => {
+        delay(500); // add a small delay to ensure the DOM has updated with the search results
         const clientHeaders = Array.from(document.querySelectorAll("p")).filter(p => p.textContent.includes("Client Full Name"));
         if (clientHeaders.length > 0) {
             return { found: "client", elements: clientHeaders };
@@ -194,9 +195,21 @@ async function addNewClient(data) {
     console.log("Zip Code Input: ", clientZipCodeInput);
 
     // click the create button
+    // const finalCreateButton = await waitForCondition(() => Array.from(modalWindow.querySelectorAll("button")).find(button => button.textContent.trim() === "Create"));
+    // console.log("Create Button: ", finalCreateButton);
+    // finalCreateButton.click();
+
+    // click the create button
     const finalCreateButton = await waitForCondition(() => Array.from(modalWindow.querySelectorAll("button")).find(button => button.textContent.trim() === "Create"));
     console.log("Create Button: ", finalCreateButton);
     finalCreateButton.click();
+
+    // Wait for the modal to disappear
+    await waitForCondition(() => {
+        const modal = Array.from(document.querySelectorAll("h6"))
+            .find(header => header.textContent.trim() === "Create A New Client");
+        return !modal; // Returns true when modal is not found
+    });
 }
 
 
